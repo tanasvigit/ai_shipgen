@@ -5,11 +5,13 @@ interface AlertsPageProps {
   alerts: Alert[]
   unresolvedAlerts: Alert[]
   handleResolveAlert: (alertId: number) => Promise<void>
+  handleRerouteAlert: (alertId: number) => Promise<void>
+  handleReassignAlert: (alertId: number) => Promise<void>
 }
 
-function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert }: AlertsPageProps) {
+function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert, handleRerouteAlert, handleReassignAlert }: AlertsPageProps) {
   return (
-    <main className="pt-8 p-8 min-h-screen">
+    <main className="pt-8 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="space-y-1">
@@ -47,20 +49,38 @@ function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert }: AlertsPage
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-on-tertiary-container uppercase tracking-tighter">AI Suggestion</p>
-                    <p className="text-on-surface font-medium">Review and resolve operationally</p>
+                    <p className="text-on-surface font-medium">
+                      {alert.reason || 'Review and resolve operationally.'} Recommended action: {alert.recommendedAction || 'resolve'}.
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button
-                    disabled={alert.resolved}
-                    onClick={() => handleResolveAlert(alert.id)}
-                    className="kinetic-gradient text-on-primary px-5 py-2 rounded-md text-sm font-bold hover:opacity-90 disabled:opacity-40"
-                  >
-                    Resolve
-                  </button>
-                  <button className="bg-surface-container-high text-on-surface px-5 py-2 rounded-md text-sm font-bold hover:bg-surface-container-highest">
-                    View Details
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      disabled={alert.resolved}
+                      onClick={() => handleResolveAlert(alert.id)}
+                      className="kinetic-gradient text-on-primary px-5 py-2 rounded-md text-sm font-bold hover:opacity-90 disabled:opacity-40"
+                    >
+                      Resolve
+                    </button>
+                    <button className="bg-surface-container-high text-on-surface px-5 py-2 rounded-md text-sm font-bold hover:bg-surface-container-highest">
+                      View Details
+                    </button>
+                    <button
+                      disabled={alert.resolved}
+                      onClick={() => handleRerouteAlert(alert.id)}
+                      className="bg-on-tertiary-container text-white px-5 py-2 rounded-md text-sm font-bold hover:opacity-90 disabled:opacity-40"
+                    >
+                      Reroute
+                    </button>
+                    <button
+                      disabled={alert.resolved}
+                      onClick={() => handleReassignAlert(alert.id)}
+                      className="bg-secondary text-on-secondary px-5 py-2 rounded-md text-sm font-bold hover:opacity-90 disabled:opacity-40"
+                    >
+                      Reassign
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

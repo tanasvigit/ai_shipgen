@@ -15,6 +15,10 @@ interface DashboardPageProps {
   form: CreateOrderForm
   setForm: Dispatch<SetStateAction<CreateOrderForm>>
   handleCreateOrder: (event: FormEvent<HTMLFormElement>) => Promise<void>
+  rawOrderText: string
+  setRawOrderText: Dispatch<SetStateAction<string>>
+  handleIngestRawOrder: () => Promise<void>
+  approvalMode: string
   isLoading: boolean
 }
 
@@ -31,27 +35,39 @@ function DashboardPage({
   form,
   setForm,
   handleCreateOrder,
+  rawOrderText,
+  setRawOrderText,
+  handleIngestRawOrder,
+  approvalMode,
   isLoading,
 }: DashboardPageProps) {
+  const totalProfit = trips.reduce((sum, trip) => sum + (trip.finance?.profit ?? 0), 0)
   return (
-    <div className="p-8 flex gap-8">
+    <div className="p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 lg:gap-8 min-w-0">
       <div className="flex-1 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricCard title="Active Trips" value={activeTrips.length} sub={`${drivers.filter((driver) => driver.availability).length} drivers available`} icon="navigation" />
           <MetricCard title="Critical Alerts" value={unresolvedAlerts.length} sub="Action required" icon="priority_high" danger />
           <MetricCard title="Completed (24h)" value={completedTrips.length} sub="System snapshot" icon="done_all" />
+          <MetricCard title="Profit Snapshot" value={`$${Math.round(totalProfit)}`} sub="Backend finance engine" icon="attach_money" />
         </div>
 
         <section>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold tracking-tight">Auto Created Orders</h3>
-            <button className="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
-              View All <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full bg-surface-container-low text-[11px] font-bold uppercase tracking-wider">Approval: {approvalMode}</span>
+              <button
+                onClick={() => setScreen('orders')}
+                className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"
+              >
+                View All <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </button>
+            </div>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {orders.slice(0, 4).map((order) => (
-              <div key={order.id} className="min-w-[320px] bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-black/5 flex flex-col">
+              <div key={order.id} className="w-full min-w-0 bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-black/5 flex flex-col">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex flex-col gap-1">
                     <span className="px-2 py-0.5 bg-surface-container-low rounded text-[9px] font-bold text-on-surface-variant uppercase w-fit">ID: SG-{order.id}</span>
@@ -113,41 +129,43 @@ function DashboardPage({
             <h3 className="text-lg font-bold tracking-tight">Ongoing Trips</h3>
             <span className="px-3 py-1 bg-surface-container-low rounded-full text-[11px] font-bold">Real-time Stream</span>
           </div>
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low/50">
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Trip ID</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Driver</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Current Location</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Progress</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-black/5">
-              {trips.map((trip) => {
-                const progress = trip.status === 'in_transit' ? 70 : trip.status === 'assigned' ? 35 : trip.status === 'completed' ? 100 : 15
-                return (
-                  <tr key={trip.id} className="hover:bg-surface-container-low transition-colors">
-                    <td className="px-6 py-4 text-xs font-bold">TRK-{trip.id}</td>
-                    <td className="px-6 py-4 text-xs font-medium">{trip.driver?.name || 'Unassigned'}</td>
-                    <td className="px-6 py-4 text-xs font-semibold">
-                      <span className={`${trip.status === 'in_transit' ? 'text-error' : 'text-on-surface'}`}>{trip.status.replace('_', ' ')}</span>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-on-surface-variant">{trip.order?.pickupLocation || '-'} </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="w-24 bg-surface-container rounded-full h-1 ml-auto">
-                        <div className={`h-full rounded-full ${trip.status === 'in_transit' ? 'bg-error' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-container-low/50">
+                  <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Trip ID</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Driver</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Current Location</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Progress</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5">
+                {trips.map((trip) => {
+                  const progress = trip.status === 'in_transit' ? 70 : trip.status === 'assigned' ? 35 : trip.status === 'completed' ? 100 : 15
+                  return (
+                    <tr key={trip.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="px-6 py-4 text-xs font-bold">TRK-{trip.id}</td>
+                      <td className="px-6 py-4 text-xs font-medium">{trip.driver?.name || 'Unassigned'}</td>
+                      <td className="px-6 py-4 text-xs font-semibold">
+                        <span className={`${trip.status === 'in_transit' ? 'text-error' : 'text-on-surface'}`}>{trip.status.replace('_', ' ')}</span>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-on-surface-variant">{trip.order?.pickupLocation || '-'} </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="w-24 bg-surface-container rounded-full h-1 ml-auto">
+                          <div className={`h-full rounded-full ${trip.status === 'in_transit' ? 'bg-error' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
 
-      <aside className="w-80 shrink-0 space-y-6">
+      <aside className="w-full xl:w-80 shrink-0 space-y-6">
         <section className="bg-surface-container-low p-6 rounded-2xl border border-black/5">
           <h3 className="text-sm font-extrabold uppercase tracking-widest text-on-surface mb-4">Create Shipment</h3>
           <form className="space-y-3" onSubmit={handleCreateOrder}>
@@ -159,6 +177,22 @@ function DashboardPage({
               {isLoading ? 'Creating...' : 'Create + Auto Assign'}
             </button>
           </form>
+          <div className="mt-5 pt-5 border-t border-black/5 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Raw Message Intake (NLP)</p>
+            <textarea
+              className="w-full rounded-lg border border-outline-variant/30 p-3 text-sm min-h-20"
+              placeholder="Example: Send 10 tons from Vizag to Hyderabad tomorrow"
+              value={rawOrderText}
+              onChange={(event) => setRawOrderText(event.target.value)}
+            />
+            <button
+              disabled={isLoading || !rawOrderText.trim()}
+              onClick={handleIngestRawOrder}
+              className="w-full h-10 bg-secondary text-on-secondary rounded-lg text-sm font-bold disabled:opacity-60"
+            >
+              Ingest Message + Create Trip
+            </button>
+          </div>
         </section>
 
         <section className="bg-surface-container-low p-6 rounded-2xl border border-black/5">

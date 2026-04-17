@@ -297,3 +297,88 @@ Primary files:
 - Lint diagnostics checked for all edited files:
   - no linter issues reported
 
+## 11) Phase 3 - Event Telemetry, Workers, and Learning Loop
+
+### 11.1 What Changed
+- Added an `Event` telemetry table and emitted lifecycle events across trip/alert mutation paths.
+- Added worker queue modules in `backend/app/workers` (`queue.py`, `tasks.py`, `runner.py`) and started worker loop on API startup.
+- Refactored inactivity alert checks to use recent event signals (`location_updated`, `trip_approved`, `driver_started_trip`).
+- Added learning loop tooling in `backend/app/ml`:
+  - dataset export (`dataset_export.py`)
+  - offline evaluation (`evaluate.py`)
+- Added `ModelVersion` table and an API to persist model evaluation metadata.
+
+### 11.2 New Backend Endpoints
+- `POST /ml/export-dataset` -> generates reproducible JSON artifact in `artifacts/`.
+- `POST /ml/evaluate` -> runs offline aggregate metrics.
+- `POST /ml/model-versions` -> stores version + metrics for iterative model improvements.
+
+### 11.3 Operations Runbook (P2)
+1. Install dependencies: `pip install -r backend/requirements.txt`
+2. Start API (starts simulation + worker loops): `uvicorn app.main:app --reload --port 8000`
+3. Trigger dataset export: `POST /ml/export-dataset`
+4. Run evaluation: `POST /ml/evaluate`
+5. Persist evaluation output: `POST /ml/model-versions`
+6. Worker failure behavior:
+   - failed jobs retry up to `max_retries`
+   - retries use incremental short backoff
+7. Replay strategy:
+   - lifecycle `events` table can be reprocessed to regenerate derived analytics
+   - exported dataset artifacts can be reused for repeatable offline runs
+
+### 11.4 Migration Workflow Start
+- Added Alembic base config:
+  - `backend/alembic.ini`
+  - `backend/alembic/env.py`
+  - `backend/alembic/versions/.gitkeep`
+- Recommended first migration bootstrap:
+  - `alembic -c backend/alembic.ini revision --autogenerate -m "p2 telemetry and model versioning"`
+  - `alembic -c backend/alembic.ini upgrade head`
+
+### 11.5 Migration Enforcement Update
+- Runtime schema patching at API startup has been removed.
+- API startup now requires Alembic-managed schema (`alembic_version` table must exist).
+- Mandatory workflow for schema changes:
+  1. Change SQLAlchemy models
+  2. Generate migration: `alembic -c backend/alembic.ini revision --autogenerate -m "<message>"`
+  3. Apply migration: `alembic -c backend/alembic.ini upgrade head`
+
+### 11.6 First Alembic Revision Applied
+- Added Alembic template file required for revision generation:
+  - `backend/alembic/script.py.mako`
+- Generated first revision:
+  - `backend/alembic/versions/9552e0de374c_baseline_schema.py`
+- Applied and verified current DB head:
+  - `alembic -c backend/alembic.ini upgrade head`
+  - `alembic -c backend/alembic.ini current` -> `9552e0de374c (head)`
+
+### 11.7 Go-Live Credentials and Startup Order
+- Required env vars (set before production go-live):
+  - `SHIPGEN_COMM_PROVIDER` (`sandbox` or provider name)
+  - `SHIPGEN_WHATSAPP_API_KEY`
+  - `SHIPGEN_SMS_API_KEY`
+  - `SHIPGEN_PUSH_API_KEY`
+  - `SHIPGEN_ROUTE_PROVIDER` (`sandbox` or provider name)
+  - `SHIPGEN_MAPBOX_API_KEY`
+  - `SHIPGEN_NLP_PROVIDER` (`sandbox` or provider name)
+  - `SHIPGEN_OPENAI_API_KEY`
+  - `SHIPGEN_QUEUE_BACKEND` (`redis` recommended for production)
+  - `SHIPGEN_REDIS_URL`
+- Startup order:
+  1. Start PostgreSQL
+  2. Start Redis (if `SHIPGEN_QUEUE_BACKEND=redis`)
+  3. Run migrations: `alembic -c backend/alembic.ini upgrade head`
+  4. Start API: `uvicorn app.main:app --reload --port 8000`
+  5. Start frontend: `npm run dev` in `frontend`
+
+### 11.8 Queue Recovery and Replay
+- Durable queue:
+  - primary queue: `SHIPGEN_QUEUE_NAME` (default `shipgen:jobs`)
+  - dead-letter queue: `SHIPGEN_DEAD_LETTER_QUEUE_NAME` (default `shipgen:jobs:dlq`)
+- Recovery playbook:
+  1. Inspect dead-letter queue payloads
+  2. Fix root cause (credentials/provider/network/schema mismatch)
+  3. Re-enqueue valid jobs after sanitizing payload/idempotency key
+- Replay strategy:
+  - Event records in `events` table remain source-of-truth for rebuilding downstream projections and analytics.
+

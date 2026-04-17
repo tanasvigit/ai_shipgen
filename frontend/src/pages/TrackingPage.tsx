@@ -10,7 +10,7 @@ interface TrackingPageProps {
 
 function TrackingPage({ selectedTrip, trips, setSelectedTripId }: TrackingPageProps) {
   return (
-    <div className="flex-1 overflow-hidden flex p-6 gap-6">
+    <div className="flex-1 overflow-hidden flex flex-col xl:flex-row p-4 sm:p-6 gap-6 min-w-0">
       <div className="flex-1 flex flex-col gap-6">
         <section className="flex-1 relative rounded-xl overflow-hidden bg-surface-container-low shadow-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-200/30 to-slate-400/20" />
@@ -38,7 +38,7 @@ function TrackingPage({ selectedTrip, trips, setSelectedTripId }: TrackingPagePr
         </section>
       </div>
 
-      <aside className="w-80 flex flex-col gap-6">
+      <aside className="w-full xl:w-80 xl:min-w-80 flex flex-col gap-6">
         <section className="flex-1 bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
           <h2 className="text-sm font-black tracking-[0.15em] text-on-surface-variant uppercase font-headline mb-4">AI INSIGHTS</h2>
           <div className="mb-6">
@@ -61,8 +61,11 @@ function TrackingPage({ selectedTrip, trips, setSelectedTripId }: TrackingPagePr
                 <p className="text-sm font-medium">{selectedTrip.status.replace('_', ' ')}</p>
               </div>
               <InfoRow label="Driver" value={selectedTrip.driver?.name || 'Unassigned'} />
+              <InfoRow label="Vehicle" value={selectedTrip.vehicle?.name || 'Unassigned'} />
               <InfoRow label="Last Update" value={selectedTrip.lastUpdated ? new Date(selectedTrip.lastUpdated).toLocaleString() : '-'} />
               <InfoRow label="Current Position" value={`${Number(selectedTrip.currentLat || 0).toFixed(3)}, ${Number(selectedTrip.currentLng || 0).toFixed(3)}`} />
+              <InfoRow label="ETA" value={selectedTrip.eta ? new Date(selectedTrip.eta).toLocaleString() : '-'} />
+              <InfoRow label="Delay Risk" value={`${Math.round((selectedTrip.delayRisk ?? 0) * 100)}%`} />
             </div>
           ) : (
             <p className="text-sm text-on-surface-variant">No trips available.</p>

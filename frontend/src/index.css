@@ -7,6 +7,7 @@ body {
   background: #f7f9fb;
   font-family: 'Inter', sans-serif;
   color: #191c1e;
+  overflow-x: hidden;
 }
 
 .font-headline {

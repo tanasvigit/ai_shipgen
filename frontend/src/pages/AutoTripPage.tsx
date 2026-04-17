@@ -4,17 +4,19 @@ import type { Screen, Trip } from '../types'
 interface AutoTripPageProps {
   selectedTrip: Trip | null
   handleApproveTrip: (tripId?: number) => Promise<void>
+  handleRejectTrip: (tripId: number) => Promise<void>
+  handleRegenerateTrip: (tripId: number) => Promise<void>
   setScreen: (screen: Screen) => void
   isLoading: boolean
 }
 
-function AutoTripPage({ selectedTrip, handleApproveTrip, setScreen, isLoading }: AutoTripPageProps) {
+function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handleRegenerateTrip, setScreen, isLoading }: AutoTripPageProps) {
   if (!selectedTrip) {
     return <div className="p-8 text-on-surface-variant">No trip yet. Create an order from Dashboard.</div>
   }
 
   return (
-    <main className="p-8 min-h-[calc(100vh-64px)]">
+    <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
       <section className="max-w-4xl mx-auto text-center mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-xs font-bold mb-4">
           <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
@@ -36,9 +38,9 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, setScreen, isLoading }:
         </div>
 
         <div className="col-span-12 lg:col-span-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InfoCard title="Assigned Driver" value={selectedTrip.driver?.name || 'Pending'} />
-            <InfoCard title="Vehicle" value="Peterbilt 579" />
+            <InfoCard title="Vehicle" value={selectedTrip.vehicle?.name || 'Pending'} />
           </div>
 
           <div className="relative rounded-2xl overflow-hidden h-[340px] bg-surface-container group">
@@ -69,13 +71,16 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, setScreen, isLoading }:
           <div className="bg-surface-container-lowest p-6 rounded-xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Cost & Profit Allocation</h3>
-              <div className="bg-tertiary-fixed px-3 py-1 rounded-md text-on-tertiary-fixed text-xs font-bold">Estimated Profit: +$1,250</div>
+              <div className="bg-tertiary-fixed px-3 py-1 rounded-md text-on-tertiary-fixed text-xs font-bold">
+                Estimated Profit: ${Math.round(selectedTrip.finance?.profit ?? 0)}
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-8">
-              <MiniMetric label="Fuel" value="$420" />
-              <MiniMetric label="Driver" value="$350" />
-              <MiniMetric label="Tolls" value="$45" />
+              <MiniMetric label="Fuel" value={`$${Math.round(selectedTrip.finance?.fuelCost ?? 0)}`} />
+              <MiniMetric label="Driver" value={`$${Math.round(selectedTrip.finance?.driverCost ?? 0)}`} />
+              <MiniMetric label="Tolls" value={`$${Math.round(selectedTrip.finance?.tollCost ?? 0)}`} />
             </div>
+            <p className="mt-4 text-xs text-on-surface-variant">Route: {(selectedTrip.primaryRoute as { name?: string } | undefined)?.name || 'Primary route pending'}</p>
           </div>
         </div>
 
@@ -88,14 +93,16 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, setScreen, isLoading }:
               </div>
               <div className="space-y-6">
                 <p className="text-sm font-medium">Trip status: {selectedTrip.status.replace('_', ' ')}</p>
-                <p className="text-sm font-medium">Driver assignment confidence is high.</p>
+                <p className="text-sm font-medium">
+                  Driver assignment confidence is {Math.round((selectedTrip.etaConfidence ?? 0.8) * 100)}%.
+                </p>
                 <div className="pt-6 border-t border-white/10">
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-xs font-medium text-on-primary-container">AI Confidence Score</span>
-                    <span className="text-2xl font-black font-headline">92%</span>
+                    <span className="text-2xl font-black font-headline">{Math.round((selectedTrip.etaConfidence ?? 0.8) * 100)}%</span>
                   </div>
                   <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-tertiary-fixed w-[92%]" />
+                    <div className="h-full bg-tertiary-fixed" style={{ width: `${Math.round((selectedTrip.etaConfidence ?? 0.8) * 100)}%` }} />
                   </div>
                 </div>
               </div>
@@ -106,13 +113,29 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, setScreen, isLoading }:
       </div>
 
       <footer className="mt-12 flex flex-col items-center gap-4 py-8 border-t border-outline-variant/10">
-        <button
-          disabled={isLoading}
-          onClick={() => handleApproveTrip(selectedTrip.id)}
-          className="kinetic-gradient text-white px-12 py-4 rounded-xl text-lg font-bold shadow-2xl hover:scale-[1.02] active:scale-95 transition-all w-full max-w-md disabled:opacity-60"
-        >
-          {isLoading ? 'Dispatching...' : 'Approve & Dispatch'}
-        </button>
+        <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button
+            disabled={isLoading}
+            onClick={() => handleApproveTrip(selectedTrip.id)}
+            className="kinetic-gradient text-white px-6 py-4 rounded-xl text-base font-bold shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
+          >
+            {isLoading ? 'Dispatching...' : 'Approve'}
+          </button>
+          <button
+            disabled={isLoading}
+            onClick={() => handleRejectTrip(selectedTrip.id)}
+            className="px-6 py-4 rounded-xl text-base font-bold bg-error text-white hover:opacity-90 disabled:opacity-60"
+          >
+            Reject
+          </button>
+          <button
+            disabled={isLoading}
+            onClick={() => handleRegenerateTrip(selectedTrip.id)}
+            className="px-6 py-4 rounded-xl text-base font-bold bg-secondary text-on-secondary hover:opacity-90 disabled:opacity-60"
+          >
+            Edit + Recalculate
+          </button>
+        </div>
         <button onClick={() => setScreen('dashboard')} className="text-on-surface-variant hover:text-on-surface font-medium text-sm underline underline-offset-4">
           Modify Selection
         </button>

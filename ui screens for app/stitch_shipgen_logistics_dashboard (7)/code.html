@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Logistics Status Update - ShipGen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0F172A",
+                        "primary-foreground": "#FFFFFF",
+                        "secondary": "#F1F5F9",
+                        "secondary-foreground": "#0F172A",
+                        "accent": "#10B981",
+                        "accent-foreground": "#FFFFFF",
+                        "muted": "#64748B",
+                        "muted-foreground": "#94A3B8",
+                        "surface": "#F8FAFC",
+                        "border": "#E2E8F0",
+                        "card": "#FFFFFF",
+                        "on-surface": "#0F172A",
+                        "on-surface-variant": "#475569"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .smart-glow {
+            box-shadow: 0 0 20px 2px rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar Navigation -->
+<header class="bg-card border-b border-border sticky top-0 z-50 h-16 w-full flex justify-between items-center px-4">
+<div class="flex items-center gap-3">
+<button class="transition-all active:scale-90 hover:bg-secondary p-2 rounded-full">
+<span class="material-symbols-outlined text-on-surface" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-bold text-lg text-primary">Trip #LG-99283</h1>
+</div>
+<button class="transition-all active:scale-90 hover:bg-secondary p-2 rounded-full">
+<span class="material-symbols-outlined text-on-surface" data-icon="sync">sync</span>
+</button>
+</header>
+<main class="flex-1 px-5 pt-6 pb-24 overflow-y-auto max-w-md mx-auto w-full">
+<!-- Header Status Section -->
+<section class="mb-8">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-muted font-bold text-[10px] tracking-widest uppercase">CURRENT TRIP</span>
+<h2 class="text-3xl font-extrabold tracking-tight text-primary mt-1">TRK-9021</h2>
+</div>
+<div class="flex flex-col items-end gap-2">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-slate-200 text-primary text-[11px] font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1" data-icon="local_shipping">local_shipping</span>
+                    In Transit
+                </span>
+<span class="inline-flex items-center text-[10px] text-accent bg-accent/10 px-2 py-0.5 rounded font-bold uppercase tracking-widest border border-accent/20">
+                    Live Update Sync Enabled
+                </span>
+</div>
+</div>
+</section>
+<!-- Smart Suggestion Box -->
+<div class="mb-8">
+<div class="bg-card smart-glow rounded-xl p-5 relative overflow-hidden">
+<div class="absolute -top-4 -right-4 p-4 opacity-[0.03]">
+<span class="material-symbols-outlined text-8xl" data-icon="bolt">bolt</span>
+</div>
+<div class="flex gap-4 items-center relative z-10">
+<div class="text-accent-foreground p-3 rounded-lg shadow-sm bg-black">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<p class="text-primary font-bold text-base leading-tight">Smart Action</p>
+<p class="text-on-surface-variant text-sm font-medium mt-0.5">You are near pickup location – mark as Reached Pickup</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Action Buttons -->
+<div class="space-y-4">
+<h3 class="text-[11px] font-bold text-muted uppercase tracking-widest px-1">Update Progress</h3>
+<div class="space-y-3">
+<!-- Reached Pickup (Primary Action) -->
+<button class="w-full flex items-center justify-between p-5 rounded-xl shadow-lg transition-all active:scale-[0.98] hover:brightness-110 bg-[#000000] text-white">
+<div class="flex items-center gap-4">
+<div class="bg-white/20 p-2.5 rounded-lg">
+<span class="material-symbols-outlined text-white" data-icon="where_to_vote" style="font-variation-settings: 'FILL' 1;">where_to_vote</span>
+</div>
+<div class="text-left">
+<span class="block text-[10px] font-bold uppercase tracking-wider opacity-80">NEXT STEP</span>
+<span class="text-lg font-bold">Reached Pickup</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-2xl text-white" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Pickup Completed -->
+<button class="w-full flex items-center justify-between p-5 bg-card border border-border rounded-xl transition-all active:scale-[0.98] hover:bg-secondary">
+<div class="flex items-center gap-4">
+<div class="bg-secondary text-muted p-2.5 rounded-lg">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</div>
+<span class="text-base font-bold text-primary">Pickup Completed</span>
+</div>
+<span class="material-symbols-outlined text-muted/50" data-icon="lock">lock</span>
+</button>
+<div class="grid grid-cols-2 gap-3">
+<!-- Reached Destination -->
+<button class="flex flex-col items-center justify-center p-6 bg-card border border-border rounded-xl transition-all active:scale-[0.98] hover:bg-secondary gap-3">
+<div class="bg-secondary text-muted p-2.5 rounded-lg">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</div>
+<span class="text-xs font-bold text-primary">Reached Destination</span>
+</button>
+<!-- Delivery Completed -->
+<button class="flex flex-col items-center justify-center p-6 bg-card border border-border rounded-xl transition-all active:scale-[0.98] hover:bg-secondary gap-3">
+<div class="bg-secondary text-muted p-2.5 rounded-lg">
+<span class="material-symbols-outlined" data-icon="task_alt">task_alt</span>
+</div>
+<span class="text-xs font-bold text-primary">Delivery Completed</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Action -->
+<div class="mt-12">
+<button class="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-secondary text-primary font-bold transition-all active:scale-[0.98] hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100">
+<span class="material-symbols-outlined text-[20px]" data-icon="report_problem">report_problem</span>
+            Report Issue
+        </button>
+</div>
+<!-- Footer Help -->
+<div class="flex items-center justify-center gap-2 text-muted mt-8 mb-4">
+<span class="material-symbols-outlined text-[16px]" data-icon="cloud_done">cloud_done</span>
+<p class="text-[11px] font-medium">Updates automatically synced to system</p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-card border-t border-border fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-6 pt-2">
+<a class="flex flex-col items-center justify-center text-primary bg-secondary rounded-xl w-1/4 py-2 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="text-[10px] font-bold mt-1 uppercase tracking-tighter">Trips</span>
+</a>
+<a class="flex flex-col items-center justify-center text-muted w-1/4 py-1 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="text-[10px] font-bold mt-1 uppercase tracking-tighter">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-muted w-1/4 py-1 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-[10px] font-bold mt-1 uppercase tracking-tighter">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-muted w-1/4 py-1 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-bold mt-1 uppercase tracking-tighter">Account</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ShipGen AI - Alerts &amp; Exceptions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-bright": "#f7f9fb",
+                    "secondary": "#505f76",
+                    "surface-container-high": "#e6e8ea",
+                    "on-secondary-container": "#54647a",
+                    "on-primary-fixed-variant": "#004b73",
+                    "primary-fixed-dim": "#93ccff",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#006398",
+                    "error": "#ba1a1a",
+                    "background": "#f7f9fb",
+                    "secondary-fixed": "#d3e4fe",
+                    "outline-variant": "#c6c6cd",
+                    "primary-container": "#001d31",
+                    "surface-container-highest": "#e0e3e5",
+                    "outline": "#76777d",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "primary-fixed": "#cce5ff",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#93ccff",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#188ace",
+                    "surface": "#f7f9fb",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#eceef0",
+                    "tertiary": "#000000",
+                    "secondary-container": "#d0e1fb",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "surface-container-low": "#f2f4f6",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-fixed": "#001d31",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e0e3e5",
+                    "on-surface-variant": "#45464d",
+                    "on-background": "#191c1e",
+                    "tertiary-container": "#002113",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#0b1c30",
+                    "primary": "#000000",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-container": "#009668",
+                    "on-surface": "#191c1e",
+                    "surface-dim": "#d8dadc"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #000000 0%, #188ace 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-fixed">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-40 bg-[#f7f9fb] h-16 px-8 flex justify-between items-center transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-slate-900 font-headline">ShipGen AI</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-headline text-sm font-medium tracking-tight text-slate-500 hover:text-slate-900 transition-colors" href="#">Dashboard</a>
+<a class="font-headline text-sm font-medium tracking-tight text-slate-500 hover:text-slate-900 transition-colors" href="#">Analytics</a>
+<a class="font-headline text-sm font-medium tracking-tight text-slate-900 border-b-2 border-slate-900 pb-1" href="#">History</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-slate-900 transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="User profile" data-alt="professional portrait of a logistics manager in a modern office environment with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtRx3D_lLnqAQCTmbpZl66j0maLepXi5vYtwgDpH7fJTVaBPEwk6y4OKEqUPqsvT_uJLGq5U_I1YrdZvXWZ0ky96hFqeBu0FHTUyWRy7McMXhaxwg9zzGqDDzP68fATg71UBXxOxgSBvgiQ-zYDxbK0ywt8zqpZZJ_Me2EYQiDFuwmuXCXpGFSKd0VGJzmcNC7BdjJ48nniU6A5Laxvx4Oas-IvIbG1vs_C0nS_JSd81_w3iocgpHr3tCu5TlBoOk7MmoWbpBRiA"/>
+</div>
+</div>
+</nav>
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-[#f2f4f6] flex flex-col p-4 gap-2 pt-20 hidden lg:flex">
+<div class="mb-6 px-2">
+<h2 class="font-headline font-black text-slate-900 text-lg">Logistics Intelligence</h2>
+<p class="text-xs text-on-surface-variant font-medium">The Kinetic Architect</p>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all duration-300 hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-semibold text-sm">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all duration-300 hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+<span class="font-semibold text-sm">Live Tracking</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-white text-slate-900 rounded-lg shadow-sm transition-all duration-300 hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-semibold text-sm">Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all duration-300 hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-semibold text-sm">Fleet</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all duration-300 hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-semibold text-sm">Automation</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-outline-variant/10 flex flex-col gap-1">
+<button class="kinetic-gradient text-white font-bold py-2.5 px-4 rounded-md mb-4 text-sm hover:opacity-90 transition-opacity">
+                New Shipment
+            </button>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-semibold text-sm">Help</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-semibold text-sm">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-64 pt-20 p-8 min-h-screen">
+<div class="max-w-7xl mx-auto">
+<!-- Editorial Header -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+<div class="space-y-1">
+<h1 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface">Alerts &amp; Exceptions</h1>
+<p class="text-on-surface-variant font-medium">Real-time intelligence and automated intervention triggers.</p>
+</div>
+<!-- Summary Section -->
+<div class="flex gap-4">
+<div class="bg-slate-50 px-8 py-5 rounded-2xl border border-slate-200/60 flex flex-col items-center justify-center min-w-[140px] shadow-sm transition-all hover:shadow-md">
+<span class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.15em] mb-1">12 Total Alerts</span>
+<span class="text-3xl font-headline font-extrabold text-slate-900">Active</span>
+</div>
+<div class="bg-red-50 px-8 py-5 rounded-2xl border border-red-200/50 flex flex-col items-center justify-center min-w-[140px] shadow-sm transition-all hover:shadow-md">
+<span class="text-red-600/80 text-[10px] font-bold uppercase tracking-[0.15em] mb-1">4 Critical</span>
+<span class="text-3xl font-headline font-extrabold text-red-700">Urgent</span>
+</div>
+</div>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Alerts List (Asymmetric focus) -->
+<section class="lg:col-span-8 space-y-6">
+<!-- Alert Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest group">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" data-icon="traffic">traffic</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-lg text-on-surface">Delay Detected</h3>
+<span class="text-xs font-mono bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">ID: TRK-9021</span>
+</div>
+</div>
+<span class="text-xs font-bold text-on-error-container bg-error-container px-3 py-1 rounded-full">CRITICAL</span>
+</div>
+<div class="grid md:grid-cols-2 gap-6 mb-6">
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Problem</p>
+<p class="text-on-surface font-medium">Traffic congestion on I-65</p>
+</div>
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-tertiary-container uppercase tracking-tighter flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="auto_awesome">auto_awesome</span>
+                                    AI Suggestion
+                                </p>
+<p class="text-on-surface font-medium">Reroute via I-75 (saves 20 mins)</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="kinetic-gradient text-on-primary px-5 py-2 rounded-md text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                                Auto Resolve
+                            </button>
+<button class="bg-surface-container-high text-on-surface px-5 py-2 rounded-md text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                                View AI Suggestion
+                            </button>
+</div>
+</div>
+<!-- Alert Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="person_off">person_off</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-lg text-on-surface">Driver Inactive</h3>
+<span class="text-xs font-mono bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">ID: TRK-8821</span>
+</div>
+</div>
+<span class="text-xs font-bold text-on-secondary-container bg-secondary-container px-3 py-1 rounded-full">WARNING</span>
+</div>
+<div class="grid md:grid-cols-2 gap-6 mb-6">
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Problem</p>
+<p class="text-on-surface font-medium">No movement for 45 minutes</p>
+</div>
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-tertiary-container uppercase tracking-tighter">Suggestion</p>
+<p class="text-on-surface font-medium">Contact driver via priority link</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" data-icon="call">call</span>
+                                Contact Driver
+                            </button>
+<button class="bg-surface-container-high text-on-surface px-5 py-2 rounded-md text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                                Dismiss
+                            </button>
+</div>
+</div>
+<!-- Alert Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" data-icon="near_me">near_me</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-lg text-on-surface">Route Deviation</h3>
+<span class="text-xs font-mono bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">ID: TRK-2198</span>
+</div>
+</div>
+<span class="text-xs font-bold text-on-error-container bg-error-container px-3 py-1 rounded-full">CRITICAL</span>
+</div>
+<div class="grid md:grid-cols-2 gap-6 mb-6">
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Problem</p>
+<p class="text-on-surface font-medium">Vehicle off-course by 5 miles</p>
+</div>
+<div class="space-y-1">
+<p class="text-xs font-bold text-on-tertiary-container uppercase tracking-tighter">Suggestion</p>
+<p class="text-on-surface font-medium">Re-sync route to vehicle</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="kinetic-gradient text-on-primary px-5 py-2 rounded-md text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" data-icon="sync">sync</span>
+                                Auto Resolve
+                            </button>
+<button class="bg-surface-container-high text-on-surface px-5 py-2 rounded-md text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                                View Details
+                            </button>
+</div>
+</div>
+</section>
+<!-- Right Side Panel: Predictive Insights -->
+<aside class="lg:col-span-4 space-y-6">
+<div class="bg-surface-container-low rounded-2xl p-6 sticky top-24">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<h2 class="font-headline font-bold text-lg text-on-surface">Predictive Insights</h2>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-container-lowest p-4 rounded-xl border-l-4 border-on-primary-fixed-variant shadow-sm">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-on-primary-fixed-variant mt-0.5" data-icon="cloudy_snowing">cloudy_snowing</span>
+<div>
+<p class="text-sm font-semibold text-on-surface leading-tight">Severe weather forecast for NE corridor</p>
+<p class="text-xs text-on-surface-variant mt-1">Impact probability: 84%</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border-l-4 border-on-tertiary-container shadow-sm">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-on-tertiary-container mt-0.5" data-icon="anchor">anchor</span>
+<div>
+<p class="text-sm font-semibold text-on-surface leading-tight">High congestion zone detected near Port of Long Beach</p>
+<p class="text-xs text-on-surface-variant mt-1">Expected delay: 2.5 hours</p>
+</div>
+</div>
+</div>
+<!-- Aesthetic Map Visual -->
+<div class="relative h-40 rounded-xl overflow-hidden mt-6">
+<img alt="stylized map showing logistics routes with glowing connection lines and data points" class="w-full h-full object-cover grayscale opacity-50" data-alt="abstract top-down view of city map with glowing logistics route overlays and subtle data visualization elements" data-location="Long Beach" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoqGmq5zKIkb7--Yvq_kzLCuieLp3IEa3cxH-ZW3GjN-qLcTxAQgNyIz8XzRM0P-Ye_KOVhgvjQ3xYgHMRiCpjaHVZKpSZAaT_1ju7uCC_wCPc8-hQ1ZqT4jr3RaRvB3aoe0nSbm3xClQHoRtGUlA2V2l8e3A45Rn1E6GmPiIMN9kMfciKdVQ6FsTR2_g5q_fKOvNudSa51m8SZi8Xk1GKDj8byduluLIfm8Udldlo_0llDHEyCK-3tVIR7ZI39F1bBR8GMU_l0Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface">Live Network Pulse</span>
+</div>
+</div>
+</div>
+<!-- Mini Automation Stat -->
+<div class="mt-8 pt-6 border-t border-outline-variant/30 text-center">
+<p class="text-3xl font-headline font-black text-on-tertiary-container">92%</p>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Auto-Correction Rate</p>
+</div>
+</div>
+</aside>
+</div>
+<!-- Footer AI Label -->
+<footer class="mt-16 py-8 border-t border-outline-variant/10 text-center">
+<div class="flex items-center justify-center gap-2 text-on-surface-variant font-medium text-sm">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span>Powered by ShipGen AI – Trips are automatically managed</span>
+</div>
+</footer>
+</div>
+</main>
+<!-- Contextual Floating Action Button (Only for relevant screens) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 kinetic-gradient text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50 group">
+<span class="material-symbols-outlined group-hover:rotate-90 transition-transform" data-icon="add">add</span>
+</button>
+</body></html>

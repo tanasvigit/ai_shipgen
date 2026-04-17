@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Driver Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#cce5ff",
+                        "on-tertiary-container": "#009668",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#001d31",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-container": "#188ace",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#d0e1fb",
+                        "background": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "outline-variant": "#c6c6cd",
+                        "surface": "#f7f9fb",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed": "#002113",
+                        "primary": "#000000",
+                        "outline": "#76777d",
+                        "on-background": "#191c1e",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-fixed-variant": "#004b73",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#505f76",
+                        "on-surface-variant": "#45464d",
+                        "inverse-on-surface": "#eff1f3",
+                        "tertiary-container": "#002113",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary": "#000000",
+                        "surface-tint": "#006398",
+                        "primary-fixed-dim": "#93ccff",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-fixed": "#001d31",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#93ccff",
+                        "on-secondary-container": "#54647a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .route-pulse {
+            stroke-dasharray: 10;
+            animation: dash 10s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -100;
+            }
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface overflow-hidden h-screen w-full select-none">
+<!-- Top Navigation Bar (Shared Component: TopAppBar) -->
+<header class="fixed top-0 w-full z-50 flex items-center px-4 h-16 bg-[#f7f9fb] dark:bg-slate-900">
+<div class="flex items-center gap-3 w-full">
+<div class="p-2 bg-surface-container-highest rounded-xl text-primary">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<h1 class="font-headline font-bold text-lg text-[#0f172a] dark:text-white leading-tight">Current Trip</h1>
+<span class="text-[10px] uppercase tracking-widest font-bold text-on-primary-container">TRK-9021</span>
+</div>
+<div class="ml-auto flex items-center gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-[11px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span>
+                In Transit
+            </div>
+<span class="material-symbols-outlined text-[#45464d] dark:text-slate-400" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</header>
+<!-- Full-screen Content Canvas (Map Layer) -->
+<main class="relative h-full w-full pt-16 pb-20">
+<!-- Map Background -->
+<div class="absolute inset-0 bg-surface-container-low">
+<img class="w-full h-full object-cover grayscale-[20%] opacity-90" data-alt="Modern satellite navigation map view of city streets with a highlighted blue path and minimal vector styling" data-location="Berlin" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN13C1jo7KZ_DFiJ6Rzlr60nKx5y-Sd0Q6gUmwOhjjxO1ZLyNK9DQCx-KN7GEUsscQSIpxv6130b0tEeKEVB8oiLBqRpDwqOBcoDHY1NalSE1pXCM9axIzoMYnJmBQD6tK0bed10CUz6v4UOJbiLS_M2ssSq6cUtvIuLa2n1X0DZCL5HySHpDuY8uP2mrlhceH4rKkn3tYbLS2eKWy5UJPzRLvtphxOXWMTY-cMJE2Ag8mjA32sATGy3wc8XxU1yEc33VbdZDdPw"/>
+<!-- Route Pulse Overlay (Visualizing AI optimization) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" viewbox="0 0 400 800">
+<path class="route-pulse opacity-60" d="M 200 600 L 200 400 Q 200 350 250 330 L 350 280" fill="none" stroke="#188ace" stroke-linecap="round" stroke-width="8"></path>
+</svg>
+<!-- Vehicle Marker -->
+<div class="absolute left-1/2 bottom-[30%] -translate-x-1/2">
+<div class="relative">
+<div class="absolute -inset-4 bg-on-primary-container/20 rounded-full animate-ping"></div>
+<div class="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg transform rotate-[-45deg]">
+<span class="material-symbols-outlined" data-icon="navigation" style="font-variation-settings: 'FILL' 1;">navigation</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating UI Elements -->
+<div class="relative z-10 p-4 h-full flex flex-col pointer-events-none">
+<!-- AI Active Badge -->
+<div class="self-start mt-2 px-4 py-2 bg-surface-container-lowest/80 backdrop-blur-xl rounded-full flex items-center gap-2 border border-outline-variant/15 pointer-events-auto shadow-sm">
+<span class="material-symbols-outlined text-on-tertiary-container text-lg" data-icon="memory">memory</span>
+<span class="text-xs font-semibold tracking-tight">AI Navigation Active</span>
+</div>
+<!-- Main Instruction Card (Asymmetric Layout) -->
+<div class="mt-4 pointer-events-auto">
+<div class="bg-surface-container-lowest backdrop-blur-2xl p-6 rounded-2xl shadow-[0px_12px_32px_rgba(25,28,30,0.06)] flex gap-5 items-start">
+<div class="w-14 h-14 bg-primary text-on-primary rounded-xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-4xl" data-icon="turn_right">turn_right</span>
+</div>
+<div class="flex-1">
+<h2 class="font-headline font-bold text-2xl leading-none mb-1">Turn right</h2>
+<p class="text-on-surface-variant font-medium">in 500 meters into Industrial Way</p>
+<div class="mt-4 flex items-center gap-6 border-t border-outline-variant/10 pt-4">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Distance</span>
+<span class="text-lg font-bold">4.2 km</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Arrival</span>
+<span class="text-lg font-bold">14:30</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Rerouting Notification (Contextual Pop-up) -->
+<div class="mt-4 animate-in slide-in-from-left duration-500 pointer-events-auto">
+<div class="bg-primary-container text-on-primary-container px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg max-w-[85%]">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+<p class="text-xs font-medium leading-tight">Traffic ahead – rerouting applied automatically by AI optimizer.</p>
+</div>
+</div>
+<!-- Map Context Label -->
+<div class="mt-auto mb-4 self-center">
+<div class="bg-surface-container-lowest/40 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant/80 tracking-widest uppercase">
+                Live Navigation – Optimized by AI
+            </div>
+</div>
+<!-- Quick Actions Section -->
+<div class="flex flex-col gap-3 pointer-events-auto mb-2">
+<button class="w-full h-16 bg-primary text-on-primary rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-xl hover:bg-on-primary-container">
+                Confirm Pickup
+                <span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</button>
+<button class="w-full h-14 bg-surface-container-high text-on-surface rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 border border-outline-variant/20">
+<span class="material-symbols-outlined text-error" data-icon="report">report</span>
+                Report Issue
+            </button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Shared Component: BottomNavBar) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#ffffff] dark:bg-slate-950 rounded-t-xl border-t border-[#c6c6cd]/15 shadow-[0px_-4px_16px_rgba(25,28,30,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#45464d] dark:text-slate-500 py-1 px-3 transition-transform duration-300 ease-out active:scale-90 hover:text-[#000000] dark:hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="local_shipping">local_shipping</span>
+<span class="font-['Inter'] font-medium text-[11px]">Trips</span>
+</a>
+<!-- Active Tab: Map -->
+<a class="flex flex-col items-center justify-center bg-[#f2f4f6] dark:bg-slate-800 text-[#000000] dark:text-[#188ace] rounded-xl py-1 px-3 transition-transform duration-300 ease-out active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="map" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="font-['Inter'] font-medium text-[11px]">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#45464d] dark:text-slate-500 py-1 px-3 transition-transform duration-300 ease-out active:scale-90 hover:text-[#000000] dark:hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-['Inter'] font-medium text-[11px]">Messages</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#45464d] dark:text-slate-500 py-1 px-3 transition-transform duration-300 ease-out active:scale-90 hover:text-[#000000] dark:hover:text-white" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-['Inter'] font-medium text-[11px]">Account</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,1 @@
+{"root":["./src/appmain.tsx","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/ui/pageparts.tsx","./src/pages/alertspage.tsx","./src/pages/autotrippage.tsx","./src/pages/dashboardpage.tsx","./src/pages/trackingpage.tsx"],"version":"6.0.3"}

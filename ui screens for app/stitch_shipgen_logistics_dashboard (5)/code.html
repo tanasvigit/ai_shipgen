@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trip Details - ShipGen Driver</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#001d31",
+                    "secondary": "#505f76",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#d8dadc",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary-container": "#009668",
+                    "on-secondary-container": "#54647a",
+                    "on-primary-fixed": "#001d31",
+                    "secondary-fixed": "#d3e4fe",
+                    "inverse-primary": "#93ccff",
+                    "on-surface-variant": "#45464d",
+                    "on-secondary-fixed": "#0b1c30",
+                    "error-container": "#ffdad6",
+                    "surface": "#f7f9fb",
+                    "secondary-container": "#d0e1fb",
+                    "on-background": "#191c1e",
+                    "error": "#ba1a1a",
+                    "surface-container-highest": "#e0e3e5",
+                    "tertiary-container": "#002113",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "primary-fixed-dim": "#93ccff",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "inverse-surface": "#2d3133",
+                    "background": "#f7f9fb",
+                    "surface-bright": "#f7f9fb",
+                    "surface-variant": "#e0e3e5",
+                    "surface-tint": "#006398",
+                    "surface-container-low": "#f2f4f6",
+                    "tertiary": "#000000",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-secondary": "#ffffff",
+                    "surface-container": "#eceef0",
+                    "primary": "#000000",
+                    "inverse-on-surface": "#eff1f3",
+                    "outline": "#76777d",
+                    "on-primary-container": "#188ace",
+                    "on-surface": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#002113",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#cce5ff",
+                    "on-primary-fixed-variant": "#004b73",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopAppBar (From JSON) -->
+<header class="fixed top-0 w-full z-50 bg-[#f2f4f6] dark:bg-slate-800">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-md mx-auto">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-50 cursor-pointer">arrow_back</span>
+<span class="font-['Manrope'] font-bold text-lg tracking-tight text-slate-900 dark:text-slate-50">Trip Details</span>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Driver profile" data-alt="professional portrait of a male logistics driver wearing a clean uniform, warm natural lighting, soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClPiz-lGBMLq2Z8qTJWp5vOw0eIX0awXxUv-ikIHBWirzxX8CEzoU1quiU7YHrQZCJ70nxYm7YVZ0Dc1Hgm1C9VSDNlmM9TcZmH8Wz0J5hs8lDWLnxq30KZ8zyH5l7wjTacwyARwNoQVfP1cl5Y3kCjzHNGhtCUnxzYeY8gvUUN1WXnef-W85a8PMiKtbfxl4Y5LOHajazHC2JlSKy94EJyZV3o2pyUhV5OXs6metl9WQceFMZpNKGyY3xLnqTliksF-Th9-BLXw"/>
+</div>
+</div>
+</header>
+<main class="max-w-md mx-auto pt-20 pb-32 px-6">
+<!-- Hero Section: Trip Identity -->
+<section class="mb-8">
+<div class="flex items-center justify-between mb-2">
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface">TRK-9021</h1>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-xs font-bold rounded-full">Assigned</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 bg-primary-container/5 border border-primary-container/10 rounded-lg w-fit">
+<span class="material-symbols-outlined text-[14px] text-on-primary-container" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-[11px] font-semibold text-on-primary-container tracking-wide uppercase">Assigned by ShipGen AI</span>
+</div>
+</section>
+<!-- Kinetic Architect Bento Grid -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Route Card (Asymmetric Layout) -->
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden">
+<div class="relative z-10">
+<!-- Pickup -->
+<div class="flex gap-4 mb-8">
+<div class="flex flex-col items-center">
+<div class="w-3 h-3 rounded-full bg-on-tertiary-container ring-4 ring-on-tertiary-container/20"></div>
+<div class="w-0.5 h-16 bg-gradient-to-b from-on-tertiary-container to-surface-container-high"></div>
+</div>
+<div>
+<p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Pickup</p>
+<h2 class="text-lg font-bold text-on-surface leading-tight">Chicago Logistics Hub</h2>
+<p class="text-sm text-secondary mb-2">123 Logistics Way, Chicago, IL</p>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="text-xs font-medium">08:00 - 10:00 AM</span>
+</div>
+</div>
+</div>
+<!-- Drop-off -->
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<div class="w-3 h-3 rounded-full bg-primary ring-4 ring-primary/10"></div>
+</div>
+<div>
+<p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Drop-off</p>
+<h2 class="text-lg font-bold text-on-surface leading-tight">Port of Savannah</h2>
+<p class="text-sm text-secondary mb-2">Terminal 4, Savannah, GA</p>
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-sm text-on-tertiary-container">event_available</span>
+<span class="text-xs font-bold">ETA: 14:30 Today</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Subtle Background Texture -->
+<div class="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
+<img class="w-full h-full object-cover" data-alt="stylized vector line map of a city grid with clean geometric patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxEbLIrZEALArkpbnKH3Jxcm38dyZ4qGIdfm15Y1upvEJx5uMrbrMjWs6GYgeTAZAtGKoE7YDo0VebzZihuf_VxIWOvY3yZIiTryxHMQYWXQVgy9p03_y1LSKJrxBJbEnC52qGamdBsRH-L8DqrQMnXXKFOhelaNNrHth49kjTldEwUvut9BNjtBjmWzS_OcdaU_u-SShYrMW2lbN5p5bjFH4ZZwUmugUlqQ6S8AGWGzIpcbjh3ABE6ZO-w-SfZc9QFR3ZhALQAw"/>
+</div>
+</div>
+<!-- Logistics Specs (Two Columns) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Load Info -->
+<div class="bg-surface-container-lowest rounded-xl p-5">
+<span class="material-symbols-outlined text-on-primary-container mb-3" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Load Info</p>
+<p class="text-base font-bold text-on-surface mt-1">14,200 kg</p>
+<p class="text-xs text-secondary">Dry Van</p>
+</div>
+<!-- Vehicle Info -->
+<div class="bg-surface-container-lowest rounded-xl p-5">
+<span class="material-symbols-outlined text-on-primary-container mb-3" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vehicle</p>
+<p class="text-base font-bold text-on-surface mt-1">Peterbilt 579</p>
+<p class="text-xs text-secondary">Cap: 45k lbs</p>
+</div>
+</div>
+<!-- Map Preview (Kinetic Visual) -->
+<div class="bg-surface-container-high rounded-xl h-40 overflow-hidden relative group">
+<img class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700" data-alt="clean minimal digital map interface showing a highway route between two cities with a glowing green navigation line" data-location="Chicago to Savannah" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl2YAug8lUJJHK78fRn20humc-tpeRtrORv_WFMsXxn0QMvMS_8wWAekMFB_MxGTnnpTUtpKmW2jOf2Io5J6STKkIXHHijVDnxuA_JKw5xqSFQkTFRqY7TSMUTRVMfk5fNmXFpmnVnaUIEPUOCkEaav9Sb4rIj8K1Adx5nCYqi38H6Yo8o9WUloyKWwjFE5ny5j07HUhSmnpuxNetVqchSQlaHKhISPEmev-gpllkGNCrUzdd74NiAb8bDskWb7QdTqj4UPMKGCA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high/80 to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+<span class="text-xs font-bold text-on-surface bg-surface-container-lowest px-2 py-1 rounded">View Route Detail</span>
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-sm">near_me</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Utilities -->
+<div class="mt-8 flex flex-col gap-3">
+<button class="flex items-center justify-center gap-3 w-full h-14 bg-surface-container-high text-on-surface font-bold rounded-xl active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">map</span>
+                View Route
+            </button>
+<button class="flex items-center justify-center gap-3 w-full h-14 bg-surface-container-high text-on-surface font-bold rounded-xl active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">support_agent</span>
+                Contact Support
+            </button>
+</div>
+</main>
+<!-- Bottom Action Bar (Floating Over Navigation) -->
+<div class="fixed bottom-24 left-0 w-full px-6 z-40 max-w-md mx-auto pointer-events-none">
+<button class="pointer-events-auto w-full h-16 bg-primary text-on-primary rounded-2xl shadow-[0_12px_32px_rgba(25,28,30,0.15)] flex items-center justify-center gap-3 active:scale-[0.98] transition-all overflow-hidden group">
+<!-- Kinetic Gradient Signature Overlay -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary to-on-primary-container opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<span class="relative z-10 material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<span class="relative z-10 font-['Manrope'] font-extrabold text-lg tracking-wide uppercase">Start Trip</span>
+</button>
+</div>
+<!-- BottomNavBar (From JSON) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-2 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-t border-slate-200/20 dark:border-slate-800/20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-50">
+<!-- Active: Trips -->
+<div class="flex flex-col items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-xl py-2 px-4 active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="local_shipping" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider mt-1">Trips</span>
+</div>
+<!-- Inactive: Map -->
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 py-2 px-4 hover:text-black dark:hover:text-white transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider mt-1">Map</span>
+</div>
+<!-- Inactive: Messages -->
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 py-2 px-4 hover:text-black dark:hover:text-white transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider mt-1">Messages</span>
+</div>
+<!-- Inactive: Account -->
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 py-2 px-4 hover:text-black dark:hover:text-white transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] font-medium text-[10px] uppercase tracking-wider mt-1">Account</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ShipGen AI - Auto Trip Creation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#d0e1fb",
+                        "background": "#f7f9fb",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-tint": "#006398",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#004b73",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary": "#000000",
+                        "on-primary-container": "#188ace",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed": "#0b1c30",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container": "#eceef0",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed": "#cce5ff",
+                        "on-primary-fixed": "#001d31",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "inverse-primary": "#93ccff",
+                        "on-tertiary-container": "#009668",
+                        "on-surface": "#191c1e",
+                        "on-secondary-container": "#54647a",
+                        "surface-container-high": "#e6e8ea",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#002113",
+                        "primary-container": "#001d31",
+                        "primary": "#000000",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#45464d",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary": "#505f76",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1e",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "outline": "#76777d",
+                        "primary-fixed-dim": "#93ccff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #000000 0%, #188ace 100%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-fixed">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-50 flex flex-col p-6 gap-2 bg-[#f2f4f6] dark:bg-slate-900 font-['Manrope'] font-medium antialiased">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-lg">local_shipping</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xl font-extrabold tracking-tighter text-[#0f172a] dark:text-white">ShipGen</span>
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant">Logistics Intelligence</span>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">grid_view</span> Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-[#ffffff] dark:bg-slate-800 text-[#0f172a] dark:text-white rounded-md shadow-sm font-bold transition-all duration-200" href="#">
+<span class="material-symbols-outlined">local_shipping</span> Shipments
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">route</span> Routes
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Inventory
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">analytics</span> Analytics
+            </a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 pt-6 border-t border-outline-variant/10">
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#45464d] dark:text-slate-400 hover:bg-[#e0e3e5] dark:hover:bg-slate-800 transition-all duration-200 rounded-md" href="#">
+<span class="material-symbols-outlined">help_outline</span> Support
+            </a>
+</div>
+</aside>
+<!-- TopAppBar Anchor -->
+<header class="sticky top-0 w-full z-40 h-16 ml-64 bg-[#f7f9fb]/70 backdrop-blur-xl flex items-center justify-between px-8 border-b border-black/5">
+<div class="flex items-center gap-8">
+<h1 class="font-black text-lg tracking-tight text-[#000000]">ShipGen AI</h1>
+<nav class="flex gap-6">
+<a class="text-[#45464d] hover:text-black font-['Manrope'] text-sm tracking-wide transition-opacity" href="#">Network</a>
+<a class="text-[#45464d] hover:text-black font-['Manrope'] text-sm tracking-wide transition-opacity" href="#">Fleet</a>
+<a class="text-[#45464d] hover:text-black font-['Manrope'] text-sm tracking-wide transition-opacity" href="#">Optimization</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2 mr-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:opacity-80">notifications_active</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:opacity-80">grid_view</span>
+</div>
+<button class="kinetic-gradient text-white px-4 py-1.5 rounded-md text-sm font-medium shadow-sm hover:opacity-90 transition-all active:scale-95">Deploy AI</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a professional male administrator in a modern office setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgryUKv-0EsGFW63xaiU0IPMJDjm_2kA7SGRNxREFiVOyFvmxhe9GvalQgBYMnshrr44Zfaqd5P5oDT7RSL-49sifIBTWxvR-AW60hSX50LY5JcIaUlsQOGY2C4G3_q6tUSFgbnnhNISN_b_YnkHf3xIf3Ii9CgT8oGpOzsth0vpRChk2nsJ9Uy4wIEpS3wkYumBVmU-ta0-1_TDVNMzEvbA6AiUH0cz1YXCQydGkhUotpqStU7CQLPzACp6a4Kii7KwH1rssCSQ"/>
+</div>
+</div>
+</header>
+<main class="ml-64 p-8 min-h-[calc(100vh-64px)]">
+<!-- 1. Center Highlight Section -->
+<section class="max-w-4xl mx-auto text-center mb-12">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-xs font-bold mb-4">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                AI Mode Active
+            </div>
+<h2 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface mb-3">Trip Auto-Created by ShipGen AI</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto leading-relaxed">Best driver, vehicle, and route have been automatically selected based on efficiency, cost, and availability to maximize operational performance.</p>
+</section>
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- 2. Left Section (Order Details) -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl space-y-6">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Order Details</h3>
+<div class="space-y-4">
+<div class="flex gap-4">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary text-xl">location_on</span>
+<div class="w-px h-10 bg-outline-variant/30 my-1"></div>
+<span class="material-symbols-outlined text-on-primary-container text-xl">local_shipping</span>
+</div>
+<div class="space-y-6">
+<div>
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase">Pickup</p>
+<p class="font-bold text-sm">Chicago Logistics Hub</p>
+<p class="text-xs text-on-surface-variant">IL, 60609</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase">Drop-off</p>
+<p class="font-bold text-sm">Port of Savannah</p>
+<p class="text-xs text-on-surface-variant">GA, 31404</p>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-surface-container-low">
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase mb-1">Load Details</p>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">14,200 kg / Dry Van</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">inventory</span>
+</div>
+</div>
+<div class="pt-4 border-t border-surface-container-low">
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase mb-1">Scheduled Window</p>
+<p class="text-sm font-bold">Oct 24, 2023</p>
+<p class="text-xs text-on-surface-variant">08:00 AM - 10:00 AM</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Main Center Section (AI Decisions & Map) -->
+<div class="col-span-12 lg:col-span-6 space-y-6">
+<div class="grid grid-cols-2 gap-4">
+<!-- Assigned Driver -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a friendly male logistics driver named Marcus Chen with a warm smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgUpk3N0DLLH2FXnp2naYM3kWE7M2y731Uk22qc5bfloNZL1ovONumZE2RdjxaSU9FXa3lO0qzESrSocY_2EuNPOQTPFuA8QtMaGP6sQWksRTVaiVjEVPJoRlAwmS_eXPzic5jT4uDjiQXmG9jQBHKap0of0IUEr4gBT0gVLDYJxazfXZEhBMDU9KdR7r0-sElmV2NO6Q2v3iZFhJcReKY_azTqccpQcD98AyzrPBC_GOv3cwmZcTwg5EYY4D5bmURKivc5PpuDg"/>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase">Assigned Driver</p>
+<p class="font-bold">Marcus Chen</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-yellow-500 text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">4.9/5</span>
+<span class="text-[10px] text-on-surface-variant">(1.2k trips)</span>
+</div>
+</div>
+</div>
+<!-- Assigned Vehicle -->
+<div class="bg-surface-container-lowest p-5 rounded-xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary text-2xl">local_shipping</span>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase">Vehicle</p>
+<p class="font-bold">Peterbilt 579</p>
+<p class="text-xs text-on-surface-variant">Cap: 45,000 lbs</p>
+</div>
+</div>
+</div>
+<!-- Route Preview (Map) -->
+<div class="relative rounded-2xl overflow-hidden h-[340px] bg-surface-container group">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" data-alt="stylized flat satellite map view showing a long-distance highway route through varied terrain in muted professional colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4-X9z_fGNvKi5yhjd5TWOp0NYJeePc00proVQAqaYpLr9fUcXaGgTNebyR7M9VqJMymtXsvDRwyxFXqrXk7-fCqCpawyNZmTXUiuWygF2LrVi6tc7nCueRgdar3UwMx3PI8ek1kacf69Wslxql6loPwJGqJZJVGvh5ZUioNCp696Jvurx5wvGnzJnd3cr0HqqJGY7-21rS8nPng7nudbdUZxam5kt6C47nrrbM5DPxxJNgmazsBhJq3aPa444BdyYaSI7jvxPcA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+<div class="absolute top-4 left-4 glass-panel px-4 py-2 rounded-full flex items-center gap-3">
+<div class="flex items-center gap-1 text-on-tertiary-container">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
+<span class="text-xs font-bold">Live Path Optimization</span>
+</div>
+</div>
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div class="text-white">
+<p class="text-[10px] uppercase font-bold opacity-80 mb-1">Estimated Arrival</p>
+<p class="text-3xl font-headline font-black">14:30 Today</p>
+</div>
+<div class="bg-white/90 backdrop-blur-sm p-4 rounded-xl flex gap-6 shadow-xl">
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase">Distance</p>
+<p class="font-headline font-bold text-lg">942 mi</p>
+</div>
+<div class="w-px h-8 bg-outline-variant/30 self-center"></div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase">Time</p>
+<p class="font-headline font-bold text-lg">14h 45m</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Cost Breakdown -->
+<div class="bg-surface-container-lowest p-6 rounded-xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Cost &amp; Profit Allocation</h3>
+<div class="bg-tertiary-fixed px-3 py-1 rounded-md text-on-tertiary-fixed text-xs font-bold">
+                            Estimated Profit: +$1,250
+                        </div>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">local_gas_station</span>
+<span class="text-xs text-on-surface-variant">Fuel Costs</span>
+</div>
+<p class="text-xl font-headline font-bold">$420.00</p>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">person</span>
+<span class="text-xs text-on-surface-variant">Driver Comp.</span>
+</div>
+<p class="text-xl font-headline font-bold">$350.00</p>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">payments</span>
+<span class="text-xs text-on-surface-variant">Tolls &amp; Fees</span>
+</div>
+<p class="text-xl font-headline font-bold">$45.00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Right Side Panel (AI Insights) -->
+<div class="col-span-12 lg:col-span-3 space-y-4">
+<div class="bg-primary text-white p-6 rounded-xl relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-8">
+<span class="text-xs font-bold uppercase tracking-widest text-on-primary-container">AI Insights</span>
+<span class="material-symbols-outlined opacity-50">insights</span>
+</div>
+<div class="space-y-6">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed">bolt</span>
+<p class="text-sm font-medium">Alternate route can save 15 minutes by bypassing I-65 delay.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed"></div>
+<p class="text-sm font-medium">Low delay risk (current traffic conditions).</p>
+</div>
+<div class="pt-6 border-t border-white/10">
+<div class="flex justify-between items-end mb-2">
+<span class="text-xs font-medium text-on-primary-container">AI Confidence Score</span>
+<span class="text-2xl font-black font-headline">92%</span>
+</div>
+<div class="h-2 bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-fixed w-[92%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Aesthetic backdrop detail -->
+<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-on-primary-container/20 rounded-full blur-3xl"></div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+<p class="text-xs font-bold text-on-surface-variant uppercase mb-4">Historical Context</p>
+<p class="text-sm text-on-surface mb-4">This route has 98% on-time delivery rate for similar weight classes.</p>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="avatar of a logistics professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADgJPvw4Hr1_4-QwhdsprJhXpOzTkc1Cw5MqLb1vt8YfsEF0eSLS0eUFhTZQWzDWAtuOPsq0kwzldcmfU0ZKw_Bn36AC_2pRfonFfpZKhm1k6EJqgAXzCilyPfGmRLJdQR1JY5f6Rufd2nmFJTtWdWsv6Qppix3yDZ53k889LuhQ9_1kjCHHud_UD_5dE0Sa1MtOI_VwftSIR_i1x9vPJ8JL0IWuD5fF-9kvor-HQ6MHDca8PTl6DkOgSdwXNJuCO6ASMmFa4gSg"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-dim overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="avatar of a logistics professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp87_LA0rHFXRSn266oAonTYt7DdtpA-kSCInsUX4I0nnJuoXiCevpA4E3H171bME7JqUsoZiTaK_jWucXWA0S9QHaqC8_BuoF5bQOCcCS6AH3CrTUrg3kcUfxUCJE6WTcY-CefyapZJv_cnWkhDJMEyMpW-3SBC5smm4ZxI6VfXVHCbFPdrnSLDwy4H9wqUIH6X0HYYwlXibvrOKq0JOF1LryeGJdWzBzS6sfESa2wcH1xpeg27nM2Vof65Im0LTVfTAiaHnpow"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">
+                            +4
+                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Bottom Action Area -->
+<footer class="mt-12 flex flex-col items-center gap-4 py-8 border-t border-outline-variant/10">
+<button class="kinetic-gradient text-white px-12 py-4 rounded-xl text-lg font-bold shadow-2xl hover:scale-[1.02] active:scale-95 transition-all w-full max-w-md">
+                Approve &amp; Dispatch
+            </button>
+<button class="text-on-surface-variant hover:text-on-surface font-medium transition-colors text-sm underline underline-offset-4">
+                Modify Selection
+            </button>
+<p class="text-xs text-on-surface-variant/60 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">info</span>
+                Once approved, the system will notify the driver and start execution automatically.
+            </p>
+</footer>
+</main>
+</body></html>

@@ -20,6 +20,14 @@
         }
       ],
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "250bb499-8398-4278-971c-af9ac28dc811"
+      }
+    },
+    "android": {
+      "package": "com.lawde123.shipgendrivermobile"
+    }
   }
 }

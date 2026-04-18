@@ -382,3 +382,42 @@ Primary files:
 - Replay strategy:
   - Event records in `events` table remain source-of-truth for rebuilding downstream projections and analytics.
 
+## 12) Driver App MVP (Web + React Native)
+
+### 12.1 Backend contract hardening
+- Added `User.driver_id` linkage to enforce driver-trip ownership (`backend/app/models.py`).
+- Driver endpoints now enforce assignment ownership checks (`backend/app/main.py`).
+- Driver transition guardrails updated:
+  - start requires `assigned`
+  - reached pickup requires `in_transit`
+  - delivered remains `in_transit -> completed`
+  (`backend/app/crud.py`)
+- Public tracking response reduced to safe DTO via `PublicTrackingResponse` and `serialize_public_trip`.
+
+### 12.2 Driver web MVP upgrade
+- `frontend/src/pages/DriverOpsPage.tsx` upgraded to task-centric layout:
+  - assigned trips list
+  - current trip action card
+  - basic exception watch panel
+
+### 12.3 React Native Android-first MVP scaffold
+- Added `driver-mobile/` app scaffold with:
+  - login
+  - assigned trips
+  - trip actions (start/pickup/delivered)
+  - basic exception list
+- Key files:
+  - `driver-mobile/App.tsx`
+  - `driver-mobile/src/api/client.ts`
+  - `driver-mobile/src/types.ts`
+  - `driver-mobile/package.json`
+
+### 12.4 Tests
+- Added backend contract tests:
+  - `backend/tests/test_driver_contracts.py`
+  - validates transition legality and driver trip filtering.
+
+### 12.5 Migration
+- Added migration for user-driver link:
+  - `backend/alembic/versions/2f2a4d1f9b11_add_user_driver_link.py`
+

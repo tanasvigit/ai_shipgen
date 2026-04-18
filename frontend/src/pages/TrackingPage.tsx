@@ -1,6 +1,7 @@
 import { InfoRow, TimelineBadge } from '../components/ui/PageParts'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Trip } from '../types'
+import { tripPublicRef } from '../utils/tripLabel'
 
 interface TrackingPageProps {
   selectedTrip: Trip | null
@@ -49,7 +50,9 @@ function TrackingPage({ selectedTrip, trips, setSelectedTripId }: TrackingPagePr
               onChange={(event) => setSelectedTripId(Number(event.target.value))}
             >
               {trips.map((trip) => (
-                <option key={trip.id} value={trip.id}>TRK-{trip.id}</option>
+                <option key={trip.id} value={trip.id}>
+                  {tripPublicRef(trip)}
+                </option>
               ))}
             </select>
           </div>

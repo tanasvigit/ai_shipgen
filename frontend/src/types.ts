@@ -87,6 +87,7 @@ export interface CreateOrderForm {
 export interface AuthSession {
   accessToken: string
   role: string
+  driverId?: number | null
 }
 
 export interface FinanceSummary {

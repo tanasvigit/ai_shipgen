@@ -16,6 +16,19 @@ export interface ShipgenSnapshot {
   alerts: Alert[]
 }
 
+export async function readErrorDetail(response: Response, fallback: string): Promise<string> {
+  try {
+    const data = (await response.json()) as { detail?: string | { msg?: string }[] }
+    if (typeof data.detail === 'string') return data.detail
+    if (Array.isArray(data.detail)) {
+      return data.detail.map((d) => (typeof d === 'object' && d && 'msg' in d ? String(d.msg) : JSON.stringify(d))).join(', ')
+    }
+  } catch {
+    /* ignore */
+  }
+  return fallback
+}
+
 function getAuthHeader(): HeadersInit {
   const rawSession = window.localStorage.getItem(AUTH_STORAGE_KEY)
   if (!rawSession) return {}
@@ -136,18 +149,28 @@ export async function fetchSystemReadiness(): Promise<SystemReadiness> {
 
 export async function driverStartTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/start`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('driver start failed')
+  if (!response.ok) throw new Error(await readErrorDetail(response, 'Driver start failed'))
   return (await response.json()) as Trip
 }
 
 export async function driverReachedPickup(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/reached-pickup`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('driver reached pickup failed')
+  if (!response.ok) throw new Error(await readErrorDetail(response, 'Reached pickup failed'))
   return (await response.json()) as Trip
 }
 
 export async function driverDeliveredTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/delivered`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('driver delivered failed')
+  if (!response.ok) throw new Error(await readErrorDetail(response, 'Mark delivered failed'))
   return (await response.json()) as Trip
+}
+
+export async function reportDriverIssue(tripId: number, message: string): Promise<Alert> {
+  const response = await fetch(`${API_BASE}/driver/trips/${tripId}/report-issue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify({ message: message.trim() || 'Driver reported issue' }),
+  })
+  if (!response.ok) throw new Error(await readErrorDetail(response, 'Report issue failed'))
+  return (await response.json()) as Alert
 }

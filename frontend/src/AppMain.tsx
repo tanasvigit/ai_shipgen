@@ -12,7 +12,17 @@ import OrdersPage from './pages/OrdersPage'
 import AppLayout from './components/layout/AppLayout'
 import useShipgenData from './hooks/useShipgenData'
 import { clearSession, getStoredSession, login } from './services/authApi'
-import { driverDeliveredTrip, driverReachedPickup, driverStartTrip, fetchApprovalMode, fetchFinanceSummary, fetchPublicTracking, fetchSystemReadiness, ingestRawOrder } from './services/shipgenApi'
+import {
+  driverDeliveredTrip,
+  driverReachedPickup,
+  driverStartTrip,
+  fetchApprovalMode,
+  fetchFinanceSummary,
+  fetchPublicTracking,
+  fetchSystemReadiness,
+  ingestRawOrder,
+  reportDriverIssue,
+} from './services/shipgenApi'
 import type { AuthSession, CreateOrderForm, FinanceSummary, NavItem, Screen, SystemReadiness, Trip } from './types'
 
 const initialOrder: CreateOrderForm = {
@@ -48,7 +58,9 @@ function AppMain() {
     alerts,
     setSelectedTripId,
     error,
+    setError,
     isLoading,
+    setIsLoading,
     activeTrips,
     completedTrips,
     unresolvedAlerts,
@@ -166,18 +178,55 @@ function AppMain() {
   }
 
   async function handleDriverStart(tripId: number) {
-    await driverStartTrip(tripId)
-    await refreshData()
+    setIsLoading(true)
+    setError('')
+    try {
+      await driverStartTrip(tripId)
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Start trip failed')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   async function handleDriverReachedPickup(tripId: number) {
-    await driverReachedPickup(tripId)
-    await refreshData()
+    setIsLoading(true)
+    setError('')
+    try {
+      await driverReachedPickup(tripId)
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Reached pickup failed')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   async function handleDriverDelivered(tripId: number) {
-    await driverDeliveredTrip(tripId)
-    await refreshData()
+    setIsLoading(true)
+    setError('')
+    try {
+      await driverDeliveredTrip(tripId)
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delivered failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleDriverReportIssue(tripId: number, message: string) {
+    setIsLoading(true)
+    setError('')
+    try {
+      await reportDriverIssue(tripId, message)
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Report issue failed')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (publicTrackingToken) {
@@ -265,6 +314,7 @@ function AppMain() {
           onStart={handleDriverStart}
           onReachedPickup={handleDriverReachedPickup}
           onDelivered={handleDriverDelivered}
+          onReportIssue={handleDriverReportIssue}
           isLoading={isLoading}
         />
       )}

@@ -11,8 +11,11 @@ class User(Base):
     username = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default="ops_manager")
+    driver_id = Column(Integer, ForeignKey("drivers.id"), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    driver = relationship("Driver", foreign_keys=[driver_id])
 
 
 class Order(Base):

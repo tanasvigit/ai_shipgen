@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "ShipGen Driver",
+    "slug": "shipgen-driver-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow ShipGen Driver to use your location for trip updates."
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}

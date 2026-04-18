@@ -1,33 +1,75 @@
-How to run
-
-PostgreSQL:-
-
-Create DB: shipgen
-Ensure user/password match current connection in backend/app/database.py:
-postgresql+psycopg://postgres:postgres@localhost:5432/shipgen
+# 1) Start PostgreSQL first (ensure DB exists: shipgen)
+# Connection expected by app:
+# postgresql+psycopg://postgres:postgres@localhost:5432/shipgen
 
 
+# 2) Start Redis (required if using durable queue backend)
+# If Redis installed locally:
+redis-server
 
-Backend:-
 
-cd backend
+# 3) Backend setup + run
+cd D:\ai_shipgen\backend
 python -m venv venv
 venv\Scripts\activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 python -m alembic -c alembic.ini upgrade head
 uvicorn app.main:app --reload --port 8000
 
-
-Frontend:-
-
-cd frontend
+# 4) Frontend setup + run (new terminal)
+cd D:\ai_shipgen\frontend
 npm install
 npm run dev
 
 
-Offline learning cycle (deterministic):-
+# 5) Optional: verify backend readiness
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/system/readiness
 
-curl -X POST http://127.0.0.1:8000/ml/offline-cycle ^
-  -H "Content-Type: application/json" ^
-  -H "Authorization: Bearer <admin_token>" ^
-  -d "{\"runLabel\":\"weekly-01\"}"
+
+# 6) Login to get token (replace username/password if changed)
+$loginBody = @{
+  username = "admin"
+  password = "admin123"
+} | ConvertTo-Json
+$loginResponse = Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/auth/login" `
+  -ContentType "application/json" `
+  -Body $loginBody
+$token = $loginResponse.accessToken
+$headers = @{ Authorization = "Bearer $token" }
+
+
+# 7) Run deterministic offline learning cycle
+$cycleBody = @{
+  runLabel = "weekly-01"
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/ml/offline-cycle" `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $cycleBody
+
+
+# 8) Optional: create order from raw text ingestion
+$ingestBody = @{
+  rawText = "Send 10 tons from Vizag to Hyderabad tomorrow"
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post `
+  -Uri "http://127.0.0.1:8000/ingestion/messages" `
+  -Headers $headers `
+  -ContentType "application/json" `
+  -Body $ingestBody
+
+
+# 9) Optional: run backend tests
+cd D:\ai_shipgen\backend
+.\venv\Scripts\activate
+python -m pytest -q
+
+
+# 10) Driver mobile (React Native Expo, Android-first)
+cd D:\ai_shipgen\driver-mobile
+npm install
+npx expo start

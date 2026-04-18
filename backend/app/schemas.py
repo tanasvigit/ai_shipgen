@@ -9,6 +9,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     accessToken: str
     role: str
+    driverId: int | None = None
 
 
 class VehicleResponse(BaseModel):
@@ -68,6 +69,17 @@ class TripResponse(BaseModel):
     delayRisk: float | None = None
     etaConfidence: float | None = None
     finance: dict | None = None
+
+
+class PublicTrackingResponse(BaseModel):
+    id: int
+    status: str
+    currentLat: float
+    currentLng: float
+    eta: str | None = None
+    delayRisk: float | None = None
+    lastUpdated: str | None = None
+    order: OrderResponse | None = None
 
 
 class ApproveTripResponse(BaseModel):
@@ -135,3 +147,7 @@ class ModelEvaluationResponse(BaseModel):
 
 class OfflineCycleRequest(BaseModel):
     runLabel: str | None = None
+
+
+class DriverIssueReportRequest(BaseModel):
+    message: str

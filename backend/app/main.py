@@ -53,6 +53,7 @@ async def startup() -> None:
         crud.seed_drivers(db)
         crud.seed_vehicles(db)
         crud.ensure_default_user(db)
+        crud.ensure_driver_users(db)
     simulation_task = asyncio.create_task(simulation_worker())
     worker_task = asyncio.create_task(run_worker_loop())
 
@@ -111,12 +112,21 @@ def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)) -> dict:
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = create_access_token(user)
-    return {"accessToken": token, "role": user.role}
+    return {"accessToken": token, "role": user.role, "driverId": user.driver_id}
 
 
 @app.get("/auth/me")
 def me(current_user: models.User = Depends(get_current_user)) -> dict:
-    return {"username": current_user.username, "role": current_user.role}
+    return {"username": current_user.username, "role": current_user.role, "driverId": current_user.driver_id}
+
+
+def _assert_driver_trip_access(current_user: models.User, trip: models.Trip) -> None:
+    if current_user.role != "driver":
+        return
+    if current_user.driver_id is None:
+        raise HTTPException(status_code=403, detail="Driver profile is not linked")
+    if trip.driver_id != current_user.driver_id:
+        raise HTTPException(status_code=403, detail="Driver is not assigned to this trip")
 
 
 @app.post("/orders")
@@ -130,12 +140,25 @@ def create_order(
 
 
 @app.get("/orders")
-def list_orders(db: Session = Depends(get_db)) -> list[dict]:
+def list_orders(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> list[dict]:
+    if current_user.role == "driver":
+        trips = crud.list_driver_trips(db, current_user.driver_id or -1)
+        order_ids = {trip.order_id for trip in trips}
+        return [crud.serialize_order(order) for order in crud.list_orders(db) if order.id in order_ids]
     return [crud.serialize_order(order) for order in crud.list_orders(db)]
 
 
 @app.get("/drivers")
-def list_drivers(db: Session = Depends(get_db)) -> list[dict]:
+def list_drivers(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> list[dict]:
+    if current_user.role == "driver" and current_user.driver_id is not None:
+        driver = db.get(models.Driver, current_user.driver_id)
+        return [crud.serialize_driver(driver)] if driver else []
     return [crud.serialize_driver(driver) for driver in crud.list_drivers(db)]
 
 
@@ -166,15 +189,26 @@ def assign_trip(
 
 
 @app.get("/trips")
-def list_trips(db: Session = Depends(get_db)) -> list[dict]:
+def list_trips(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> list[dict]:
+    if current_user.role == "driver":
+        driver_trips = crud.list_driver_trips(db, current_user.driver_id or -1)
+        return [crud.serialize_trip(trip) for trip in driver_trips]
     return [crud.serialize_trip(trip) for trip in crud.list_trips(db)]
 
 
 @app.get("/trips/{trip_id}")
-def get_trip(trip_id: int, db: Session = Depends(get_db)) -> dict:
+def get_trip(
+    trip_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> dict:
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(current_user, trip)
     return crud.serialize_trip(trip)
 
 
@@ -188,6 +222,7 @@ def update_trip_location(
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(_current_user, trip)
     trip = crud.update_trip_location(db, trip, payload.lat, payload.lng)
     return crud.serialize_trip(trip)
 
@@ -219,6 +254,7 @@ def complete_trip(
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(_current_user, trip)
     try:
         trip = crud.complete_trip(db, trip)
         crud.log_trip_audit(db, trip, action="completed", actor=_current_user.username)
@@ -229,7 +265,13 @@ def complete_trip(
 
 
 @app.get("/alerts")
-def list_alerts(db: Session = Depends(get_db)) -> list[dict]:
+def list_alerts(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> list[dict]:
+    if current_user.role == "driver":
+        driver_trip_ids = {trip.id for trip in crud.list_driver_trips(db, current_user.driver_id or -1)}
+        return [crud.serialize_alert(alert) for alert in crud.list_alerts(db) if alert.trip_id in driver_trip_ids]
     return [crud.serialize_alert(alert) for alert in crud.list_alerts(db)]
 
 
@@ -421,6 +463,7 @@ def driver_start_trip(
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(_current_user, trip)
     try:
         trip = crud.driver_start_trip(db, trip, actor=_current_user.username)
     except ValueError as error:
@@ -437,7 +480,11 @@ def driver_reached_pickup(
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
-    trip = crud.driver_reached_pickup(db, trip, actor=_current_user.username)
+    _assert_driver_trip_access(_current_user, trip)
+    try:
+        trip = crud.driver_reached_pickup(db, trip, actor=_current_user.username)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
     return crud.serialize_trip(trip)
 
 
@@ -450,6 +497,7 @@ def driver_delivered_trip(
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(_current_user, trip)
     try:
         trip = crud.complete_trip(db, trip)
         crud.log_trip_audit(db, trip, action="driver_delivered_trip", actor=_current_user.username)
@@ -459,10 +507,25 @@ def driver_delivered_trip(
     return crud.serialize_trip(trip)
 
 
-@app.get("/public/tracking/{token}")
+@app.post("/driver/trips/{trip_id}/report-issue")
+def driver_report_issue(
+    trip_id: int,
+    payload: schemas.DriverIssueReportRequest,
+    db: Session = Depends(get_db),
+    _current_user: models.User = Depends(require_role("driver", "admin", "ops_manager")),
+) -> dict:
+    trip = crud.get_trip(db, trip_id)
+    if trip is None:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    _assert_driver_trip_access(_current_user, trip)
+    alert = crud.driver_report_issue(db, trip, actor=_current_user.username, message=payload.message.strip() or "Driver reported issue")
+    return crud.serialize_alert(alert)
+
+
+@app.get("/public/tracking/{token}", response_model=schemas.PublicTrackingResponse)
 def public_tracking(token: str, db: Session = Depends(get_db)) -> dict:
     trip_id = decode_public_tracking_token(token)
     trip = crud.get_trip(db, trip_id)
     if trip is None:
         raise HTTPException(status_code=404, detail="Trip not found")
-    return crud.serialize_trip(trip)
+    return crud.serialize_public_trip(trip)

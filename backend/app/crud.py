@@ -231,6 +231,16 @@ def list_trips(db: Session) -> list[models.Trip]:
     return db.scalars(stmt).unique().all()
 
 
+def list_driver_trips(db: Session, driver_id: int) -> list[models.Trip]:
+    stmt = (
+        select(models.Trip)
+        .options(joinedload(models.Trip.order), joinedload(models.Trip.driver), joinedload(models.Trip.vehicle))
+        .where(models.Trip.driver_id == driver_id)
+        .order_by(models.Trip.id.desc())
+    )
+    return db.scalars(stmt).unique().all()
+
+
 def approve_trip(db: Session, trip: models.Trip) -> models.Trip:
     if not can_transition(trip.status, "in_transit"):
         raise ValueError(f"Cannot approve trip in '{trip.status}' state")
@@ -288,6 +298,19 @@ def serialize_alert(alert: models.Alert) -> dict:
         "reason": alert.reason,
         "resolved": alert.resolved,
         "createdAt": alert.created_at.isoformat() if alert.created_at else None,
+    }
+
+
+def serialize_public_trip(trip: models.Trip) -> dict:
+    return {
+        "id": trip.id,
+        "status": trip.status,
+        "currentLat": trip.current_lat,
+        "currentLng": trip.current_lng,
+        "eta": trip.eta,
+        "delayRisk": trip.delay_risk,
+        "lastUpdated": trip.last_updated.isoformat() if trip.last_updated else None,
+        "order": serialize_order(trip.order) if trip.order else None,
     }
 
 
@@ -641,7 +664,7 @@ def get_finance_summary(db: Session) -> dict:
 
 
 def driver_start_trip(db: Session, trip: models.Trip, actor: str) -> models.Trip:
-    if trip.status not in {"assigned", "created"}:
+    if trip.status != "assigned":
         raise ValueError(f"Cannot start trip in '{trip.status}' state")
     trip.status = "in_transit"
     trip.in_transit_started_at = datetime.now(timezone.utc)
@@ -654,6 +677,8 @@ def driver_start_trip(db: Session, trip: models.Trip, actor: str) -> models.Trip
 
 
 def driver_reached_pickup(db: Session, trip: models.Trip, actor: str) -> models.Trip:
+    if trip.status != "in_transit":
+        raise ValueError(f"Cannot mark pickup in '{trip.status}' state")
     trip.pickup_reached_at = datetime.now(timezone.utc)
     trip.last_updated = datetime.now(timezone.utc)
     log_trip_audit(db, trip, action="driver_reached_pickup", actor=actor)
@@ -661,6 +686,39 @@ def driver_reached_pickup(db: Session, trip: models.Trip, actor: str) -> models.
     db.commit()
     db.refresh(trip)
     return trip
+
+
+def driver_report_issue(db: Session, trip: models.Trip, actor: str, message: str) -> models.Alert:
+    alert = models.Alert(
+        trip_id=trip.id,
+        type="driver_issue",
+        message=message,
+        resolved=False,
+        recommended_action="reassign",
+        reason="Driver reported an issue from the mobile app.",
+    )
+    db.add(alert)
+    log_trip_audit(db, trip, action="driver_reported_issue", actor=actor, details={"message": message})
+    emit_event(
+        db,
+        event_type="driver_issue_reported",
+        source=actor,
+        trip_id=trip.id,
+        payload={"message": message},
+    )
+    communication.send_notification(db, trip_id=trip.id, channel="push", event_type="driver_issue_reported")
+    enqueue_job_sync(
+        "notification",
+        {
+            "tripId": trip.id,
+            "channel": "push",
+            "eventType": "driver_issue_reported",
+            "idempotencyKey": f"driver-issue-{trip.id}-{int(datetime.now(timezone.utc).timestamp())}",
+        },
+    )
+    db.commit()
+    db.refresh(alert)
+    return alert
 
 
 def create_model_version_record(db: Session, payload: schemas.ModelEvaluationRecord) -> models.ModelVersion:
@@ -685,3 +743,24 @@ def serialize_model_version(record: models.ModelVersion) -> dict:
         "notes": record.notes,
         "createdAt": record.created_at.isoformat() if record.created_at else None,
     }
+
+
+def ensure_driver_users(db: Session) -> None:
+    drivers = list_drivers(db)
+    for driver in drivers:
+        username = f"driver{driver.id}"
+        existing = get_user_by_username(db, username)
+        if existing is not None:
+            if existing.driver_id is None:
+                existing.driver_id = driver.id
+            continue
+        db.add(
+            models.User(
+                username=username,
+                password_hash=hash_password("driver123"),
+                role="driver",
+                driver_id=driver.id,
+                is_active=True,
+            )
+        )
+    db.commit()

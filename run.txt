@@ -6,6 +6,11 @@
 # 2) Start Redis (required if using durable queue backend)
 # If Redis installed locally:
 redis-server
+#test server running:-
+open redis cli-redis-cli
+type-ping
+response-pong
+
 
 
 # 3) Backend setup + run
@@ -24,6 +29,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 cd D:\ai_shipgen\frontend
 npm install
 npm run dev
+npm start
 npx expo start  (for app)
 
 

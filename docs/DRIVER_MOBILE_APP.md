@@ -195,3 +195,4 @@ After the build, download the artifact from the EAS build page. **Signing:** EAS
 
 - **Web / ops application:** `docs/WEB_APPLICATION.md`
 - **Local runbook (backend + frontend commands):** `run.txt` (repo root)
+- **Error contract + friendly message catalog:** `docs/ERROR_MESSAGES.md`

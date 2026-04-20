@@ -1,6 +1,6 @@
 import { Input, MetricCard } from '../components/ui/PageParts'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-import type { Alert, CreateOrderForm, Driver, Order, Screen, Trip } from '../types'
+import type { Alert, CreateOrderForm, Driver, Order, OrdersListFilter, Screen, Trip } from '../types'
 
 interface DashboardPageProps {
   orders: Order[]
@@ -20,6 +20,8 @@ interface DashboardPageProps {
   handleIngestRawOrder: () => Promise<void>
   approvalMode: string
   isLoading: boolean
+  openOrdersWithFilter: (filter: OrdersListFilter) => void
+  actionError: string
 }
 
 function DashboardPage({
@@ -40,15 +42,29 @@ function DashboardPage({
   handleIngestRawOrder,
   approvalMode,
   isLoading,
+  openOrdersWithFilter,
+  actionError,
 }: DashboardPageProps) {
   const totalProfit = trips.reduce((sum, trip) => sum + (trip.finance?.profit ?? 0), 0)
   return (
     <div className="p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 lg:gap-8 min-w-0">
       <div className="flex-1 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard title="Active Trips" value={activeTrips.length} sub={`${drivers.filter((driver) => driver.availability).length} drivers available`} icon="navigation" />
+          <MetricCard
+            title="Active Trips"
+            value={activeTrips.length}
+            sub={`${drivers.filter((driver) => driver.availability).length} drivers available · tap for orders`}
+            icon="navigation"
+            onClick={() => openOrdersWithFilter('active')}
+          />
           <MetricCard title="Critical Alerts" value={unresolvedAlerts.length} sub="Action required" icon="priority_high" danger />
-          <MetricCard title="Completed (24h)" value={completedTrips.length} sub="System snapshot" icon="done_all" />
+          <MetricCard
+            title="Completed (24h)"
+            value={completedTrips.length}
+            sub="System snapshot · tap for orders"
+            icon="done_all"
+            onClick={() => openOrdersWithFilter('completed')}
+          />
           <MetricCard title="Profit Snapshot" value={`$${Math.round(totalProfit)}`} sub="Backend finance engine" icon="attach_money" />
         </div>
 
@@ -58,7 +74,7 @@ function DashboardPage({
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 rounded-full bg-surface-container-low text-[11px] font-bold uppercase tracking-wider">Approval: {approvalMode}</span>
               <button
-                onClick={() => setScreen('orders')}
+                onClick={() => openOrdersWithFilter('all')}
                 className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"
               >
                 View All <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -168,6 +184,7 @@ function DashboardPage({
       <aside className="w-full xl:w-80 shrink-0 space-y-6">
         <section className="bg-surface-container-low p-6 rounded-2xl border border-black/5">
           <h3 className="text-sm font-extrabold uppercase tracking-widest text-on-surface mb-4">Create Shipment</h3>
+          {actionError ? <p className="mb-3 text-sm font-semibold text-on-error-container bg-error-container px-3 py-2 rounded-lg">{actionError}</p> : null}
           <form className="space-y-3" onSubmit={handleCreateOrder}>
             <Input label="Pickup" value={form.pickupLocation} onChange={(value) => setForm((prev) => ({ ...prev, pickupLocation: value }))} />
             <Input label="Drop" value={form.dropLocation} onChange={(value) => setForm((prev) => ({ ...prev, dropLocation: value }))} />

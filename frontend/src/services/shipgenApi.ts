@@ -1,4 +1,5 @@
 import type { Alert, AuthSession, CreateOrderForm, Driver, FinanceSummary, Order, SystemReadiness, Trip, TripFinance } from '../types'
+import { readApiError } from './errorUtils'
 
 const API_BASE = 'http://127.0.0.1:8000'
 const AUTH_STORAGE_KEY = 'shipgen-auth-session'
@@ -17,16 +18,14 @@ export interface ShipgenSnapshot {
 }
 
 export async function readErrorDetail(response: Response, fallback: string): Promise<string> {
-  try {
-    const data = (await response.json()) as { detail?: string | { msg?: string }[] }
-    if (typeof data.detail === 'string') return data.detail
-    if (Array.isArray(data.detail)) {
-      return data.detail.map((d) => (typeof d === 'object' && d && 'msg' in d ? String(d.msg) : JSON.stringify(d))).join(', ')
-    }
-  } catch {
-    /* ignore */
-  }
-  return fallback
+  const parsed = await readApiError(response, fallback)
+  return parsed.message
+}
+
+async function requireOk(response: Response, fallback: string): Promise<void> {
+  if (response.ok) return
+  const parsed = await readApiError(response, fallback)
+  throw new Error(parsed.message)
 }
 
 function getAuthHeader(): HeadersInit {
@@ -49,7 +48,9 @@ export async function fetchShipgenSnapshot(): Promise<ShipgenSnapshot> {
   ])
 
   if (!ordersRes.ok || !driversRes.ok || !tripsRes.ok || !alertsRes.ok) {
-    throw new Error('fetch failed')
+    const source = [ordersRes, driversRes, tripsRes, alertsRes].find((res) => !res.ok) ?? ordersRes
+    const parsed = await readApiError(source, 'Unable to load dashboard data right now.')
+    throw new Error(parsed.message)
   }
 
   const [orders, drivers, trips, alerts] = await Promise.all([
@@ -68,53 +69,53 @@ export async function createOrder(payload: CreateOrderForm): Promise<CreateOrder
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(payload),
   })
-  if (!response.ok) throw new Error('create failed')
+  await requireOk(response, 'We could not create the order. Please try again.')
   return (await response.json()) as CreateOrderResponse
 }
 
 export async function approveTrip(tripId: number): Promise<void> {
   const response = await fetch(`${API_BASE}/trips/${tripId}/approve`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('approve failed')
+  await requireOk(response, 'We could not start the trip. Please refresh and try again.')
 }
 
 export async function resolveAlert(alertId: number): Promise<void> {
   const response = await fetch(`${API_BASE}/alerts/${alertId}/resolve`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('resolve failed')
+  await requireOk(response, 'We could not resolve this alert. Please try again.')
 }
 
 export async function rejectTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/trips/${tripId}/reject`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('reject failed')
+  await requireOk(response, 'We could not reject this trip. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function regenerateTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/trips/${tripId}/regenerate`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('regenerate failed')
+  await requireOk(response, 'We could not regenerate this trip plan. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function rerouteAlert(alertId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/alerts/${alertId}/reroute`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('reroute failed')
+  await requireOk(response, 'We could not reroute this trip. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function reassignAlert(alertId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/alerts/${alertId}/reassign`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error('reassign failed')
+  await requireOk(response, 'We could not reassign the driver. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function fetchTripFinance(tripId: number): Promise<TripFinance> {
   const response = await fetch(`${API_BASE}/trips/${tripId}/finance`, { headers: getAuthHeader() })
-  if (!response.ok) throw new Error('finance fetch failed')
+  await requireOk(response, 'We could not load trip finance details.')
   return (await response.json()) as TripFinance
 }
 
 export async function fetchFinanceSummary(): Promise<FinanceSummary> {
   const response = await fetch(`${API_BASE}/finance/summary`, { headers: getAuthHeader() })
-  if (!response.ok) throw new Error('finance summary failed')
+  await requireOk(response, 'We could not load finance summary right now.')
   return (await response.json()) as FinanceSummary
 }
 
@@ -124,44 +125,44 @@ export async function ingestRawOrder(rawText: string): Promise<CreateOrderRespon
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ rawText }),
   })
-  if (!response.ok) throw new Error('ingestion failed')
+  await requireOk(response, 'We could not process this message. Please edit and retry.')
   return (await response.json()) as CreateOrderResponse
 }
 
 export async function fetchPublicTracking(token: string): Promise<Trip> {
   const response = await fetch(`${API_BASE}/public/tracking/${token}`)
-  if (!response.ok) throw new Error('public tracking failed')
+  await requireOk(response, 'Tracking info is unavailable right now.')
   return (await response.json()) as Trip
 }
 
 export async function fetchApprovalMode(): Promise<string> {
   const response = await fetch(`${API_BASE}/settings/approval-mode`, { headers: getAuthHeader() })
-  if (!response.ok) throw new Error('approval mode fetch failed')
+  await requireOk(response, 'Could not load approval mode settings.')
   const payload = (await response.json()) as { mode: string }
   return payload.mode
 }
 
 export async function fetchSystemReadiness(): Promise<SystemReadiness> {
   const response = await fetch(`${API_BASE}/system/readiness`, { headers: getAuthHeader() })
-  if (!response.ok) throw new Error('system readiness fetch failed')
+  await requireOk(response, 'Could not load system readiness right now.')
   return (await response.json()) as SystemReadiness
 }
 
 export async function driverStartTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/start`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error(await readErrorDetail(response, 'Driver start failed'))
+  await requireOk(response, 'We could not start this trip. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function driverReachedPickup(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/reached-pickup`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error(await readErrorDetail(response, 'Reached pickup failed'))
+  await requireOk(response, 'We could not confirm pickup yet. Please try again.')
   return (await response.json()) as Trip
 }
 
 export async function driverDeliveredTrip(tripId: number): Promise<Trip> {
   const response = await fetch(`${API_BASE}/driver/trips/${tripId}/delivered`, { method: 'POST', headers: getAuthHeader() })
-  if (!response.ok) throw new Error(await readErrorDetail(response, 'Mark delivered failed'))
+  await requireOk(response, 'We could not mark this trip delivered. Please try again.')
   return (await response.json()) as Trip
 }
 
@@ -171,6 +172,6 @@ export async function reportDriverIssue(tripId: number, message: string): Promis
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ message: message.trim() || 'Driver reported issue' }),
   })
-  if (!response.ok) throw new Error(await readErrorDetail(response, 'Report issue failed'))
+  await requireOk(response, 'We could not report this issue. Please try again.')
   return (await response.json()) as Alert
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Alert, CreateOrderForm, Driver, Order, Trip } from '../types'
+import { userMessageFromUnknown } from '../services/errorUtils'
 import { approveTrip, createOrder, fetchShipgenSnapshot, reassignAlert, regenerateTrip, rejectTrip, rerouteAlert, resolveAlert } from '../services/shipgenApi'
 
 const POLL_MS = 5000
@@ -32,8 +33,8 @@ function useShipgenData(enabled = true) {
       } else {
         setSelectedTripId(null)
       }
-    } catch {
-      setError('Unable to reach backend. Start FastAPI on :8000.')
+    } catch (err) {
+      setError(userMessageFromUnknown(err, 'We could not refresh data right now. Please try again.'))
     }
   }, [enabled])
 
@@ -53,9 +54,10 @@ function useShipgenData(enabled = true) {
         await refreshData()
         if (payload.trip?.id) setSelectedTripId(payload.trip.id)
         return payload
-      } catch {
-        setError('Could not create order.')
-        throw new Error('Could not create order.')
+      } catch (err) {
+        const message = userMessageFromUnknown(err, 'We could not create the order. Please try again.')
+        setError(message)
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
@@ -71,9 +73,10 @@ function useShipgenData(enabled = true) {
       try {
         await approveTrip(tripId)
         await refreshData()
-      } catch {
-        setError('Approve failed.')
-        throw new Error('Approve failed.')
+      } catch (err) {
+        const message = userMessageFromUnknown(err, 'We could not start this trip. Please try again.')
+        setError(message)
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
@@ -86,8 +89,10 @@ function useShipgenData(enabled = true) {
       try {
         await resolveAlert(alertId)
         await refreshData()
-      } catch {
-        setError('Could not resolve alert.')
+      } catch (err) {
+        const message = userMessageFromUnknown(err, 'We could not resolve this alert. Please try again.')
+        setError(message)
+        throw new Error(message)
       }
     },
     [refreshData],

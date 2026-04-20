@@ -4,13 +4,14 @@ import hmac
 import json
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import models
 from ..database import get_db
+from ..errors import raise_api_error
 from .config import settings
 
 auth_scheme = HTTPBearer(auto_error=False)
@@ -49,8 +50,8 @@ def decode_access_token(token: str) -> dict:
         if int(payload["exp"]) < int(datetime.now(timezone.utc).timestamp()):
             raise ValueError("expired")
         return payload
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token") from exc
+    except Exception:  # noqa: BLE001
+        raise_api_error(status=status.HTTP_401_UNAUTHORIZED, code="AUTH_INVALID_TOKEN", message="Your session expired. Please sign in again.")
 
 
 def get_current_user(
@@ -58,18 +59,18 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> models.User:
     if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+        raise_api_error(status=status.HTTP_401_UNAUTHORIZED, code="AUTH_REQUIRED", message="Please sign in to continue.")
     payload = decode_access_token(credentials.credentials)
     user = db.scalar(select(models.User).where(models.User.username == payload["sub"]))
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise_api_error(status=status.HTTP_401_UNAUTHORIZED, code="AUTH_INVALID_TOKEN", message="Your session expired. Please sign in again.")
     return user
 
 
 def require_role(*allowed_roles: str):
     def _role_dependency(current_user: models.User = Depends(get_current_user)) -> models.User:
         if current_user.role not in allowed_roles:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role")
+            raise_api_error(status=status.HTTP_403_FORBIDDEN, code="AUTH_FORBIDDEN", message="You do not have access to this action.")
         return current_user
 
     return _role_dependency
@@ -87,5 +88,5 @@ def decode_public_tracking_token(token: str) -> int:
     payload = decode_access_token(token)
     trip_id = payload.get("tripId")
     if not isinstance(trip_id, int):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid tracking token")
+        raise_api_error(status=status.HTTP_401_UNAUTHORIZED, code="TRACKING_INVALID_TOKEN", message="This tracking link is invalid or has expired.")
     return trip_id

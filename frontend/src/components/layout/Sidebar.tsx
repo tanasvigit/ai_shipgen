@@ -6,6 +6,8 @@ interface SidebarProps {
   isSidebarCollapsed: boolean
   unresolvedAlertsCount: number
   onSelectScreen: (screen: Screen) => void
+  onLogout: () => void
+  sessionRole: string
 }
 
 function Sidebar({
@@ -14,6 +16,8 @@ function Sidebar({
   isSidebarCollapsed,
   unresolvedAlertsCount,
   onSelectScreen,
+  onLogout,
+  sessionRole,
 }: SidebarProps) {
   return (
     <aside
@@ -46,6 +50,18 @@ function Sidebar({
         })}
       </nav>
       <div className={`mt-auto pt-6 border-t border-black/5 ${isSidebarCollapsed ? 'text-center' : 'space-y-2'}`}>
+        <button
+          type="button"
+          onClick={onLogout}
+          title={isSidebarCollapsed ? 'Logout' : undefined}
+          className={`w-full rounded-md border border-outline-variant/30 transition-colors ${
+            isSidebarCollapsed
+              ? 'px-2 py-2 text-center text-[11px] hover:bg-surface-container-low'
+              : 'px-3 py-2 text-left text-xs font-semibold hover:bg-surface-container-low'
+          }`}
+        >
+          {isSidebarCollapsed ? '↩' : `Logout (${sessionRole})`}
+        </button>
         {!isSidebarCollapsed ? <div className="text-[11px] text-on-surface-variant">Live polling every 5s</div> : null}
         <div className="text-[11px] text-on-surface-variant">Alerts: {unresolvedAlertsCount}</div>
       </div>

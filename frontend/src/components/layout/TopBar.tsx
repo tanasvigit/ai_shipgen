@@ -1,9 +1,11 @@
 interface TopBarProps {
   isSidebarCollapsed: boolean
   onToggleSidebar: () => void
+  onLogout: () => void
+  sessionRole: string
 }
 
-function TopBar({ isSidebarCollapsed, onToggleSidebar }: TopBarProps) {
+function TopBar({ isSidebarCollapsed, onToggleSidebar, onLogout, sessionRole }: TopBarProps) {
   return (
     <header className="sticky top-0 w-full z-40 h-16 bg-[#f7f9fb]/70 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] font-['Manrope'] text-sm tracking-wide min-w-0">
       <div className="flex items-center gap-4 sm:gap-8 min-w-0">
@@ -23,6 +25,13 @@ function TopBar({ isSidebarCollapsed, onToggleSidebar }: TopBarProps) {
           </div>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-on-surface underline underline-offset-4"
+      >
+        Logout ({sessionRole})
+      </button>
     </header>
   )
 }

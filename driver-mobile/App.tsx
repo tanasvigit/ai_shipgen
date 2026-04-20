@@ -11,6 +11,7 @@ import {
   reportDriverIssue,
   updateTripLocation,
 } from './src/api/client'
+import { DEFAULT_ERROR_AUTO_HIDE_MS, isBlockingMessage, openIssueSummary, toFriendlyMessage } from './src/api/errorUtils'
 import AppButton from './src/components/AppButton'
 import TripPicker from './src/components/TripPicker'
 import { tripPublicRef } from './src/formatTrip'
@@ -48,7 +49,7 @@ export default function App() {
     }
     if (selectedTrip.status === 'in_transit') {
       if (!selectedTrip.pickupReachedAt) {
-        return 'You are near pickup location - mark as Reached Pickup'
+        return 'If you reached pickup, confirm it now.'
       }
       return 'Proceed to destination; mark delivered when the drop-off is complete.'
     }
@@ -59,12 +60,10 @@ export default function App() {
     if (!selectedTrip) return null
     const parts: string[] = []
     if ((selectedTrip.delayRisk ?? 0) >= 0.6) {
-      parts.push(`Delay risk ${Math.round((selectedTrip.delayRisk ?? 0) * 100)}% — monitor route and contact ops if needed.`)
+      parts.push(`Delay risk is ${Math.round((selectedTrip.delayRisk ?? 0) * 100)}%. Check route and contact operations if needed.`)
     }
-    const openForTrip = alerts.filter((a) => a.tripId === selectedTrip.id && !a.resolved).length
-    if (openForTrip > 0) {
-      parts.push(`${openForTrip} open alert(s).`)
-    }
+    const issueSummary = openIssueSummary(alerts, selectedTrip.id)
+    if (issueSummary) parts.push(issueSummary)
     return parts.length ? parts.join(' ') : null
   }, [selectedTrip, alerts])
 
@@ -94,14 +93,14 @@ export default function App() {
       setTrips((prev) => prev.map((trip) => (trip.id === latest.id ? latest : trip)))
       const nextAlerts = await fetchAlerts(session).catch(() => [] as TripAlert[])
       setAlerts(nextAlerts)
-    } catch {
-      setError('Failed to load trip')
+    } catch (err) {
+      setError(toFriendlyMessage(err, 'We could not load this trip. Please try again.'))
     }
   }
 
   useEffect(() => {
     if (!session) return
-    refreshTrips(session).catch(() => setError('Unable to fetch trips'))
+    refreshTrips(session).catch((err) => setError(toFriendlyMessage(err, 'We could not load trips right now.')))
     const timer = setInterval(() => {
       refreshTrips(session).catch(() => null)
     }, 5000)
@@ -113,6 +112,13 @@ export default function App() {
       setActiveScreen('trip-details')
     }
   }, [session, trips.length, activeScreen])
+
+  useEffect(() => {
+    if (!error) return
+    if (isBlockingMessage(error)) return
+    const timer = setTimeout(() => setError(''), DEFAULT_ERROR_AUTO_HIDE_MS)
+    return () => clearTimeout(timer)
+  }, [error])
 
   function performLogout() {
     setSession(null)
@@ -129,13 +135,13 @@ export default function App() {
     try {
       const nextSession = await apiLogin(username, password)
       if (nextSession.role !== 'driver') {
-        setError('Please login with driver account')
+        setError('Please sign in with a driver account.')
         return
       }
       setSession(nextSession)
       setActiveScreen('trip-details')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(toFriendlyMessage(err, 'Sign-in failed. Please check your credentials.'))
     } finally {
       setLoading(false)
     }
@@ -152,7 +158,7 @@ export default function App() {
       if (action === 'issue') await reportDriverIssue(session, selectedTrip.id, 'Driver reported issue from mobile workflow')
       await refreshTrips(session)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action failed. Try again.')
+      setError(toFriendlyMessage(err, 'We could not complete that action. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -162,7 +168,7 @@ export default function App() {
     if (!session || !selectedTrip) return
     const coords = await getCurrentLatLng()
     if (!coords) {
-      setError('Location permission denied. Enable location to sync GPS updates.')
+      setError('Location permission is off. Enable it to share live location.')
       return
     }
     setLoading(true)
@@ -171,7 +177,7 @@ export default function App() {
       await updateTripLocation(session, selectedTrip.id, coords.lat, coords.lng)
       await refreshTrips(session)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Location update failed')
+      setError(toFriendlyMessage(err, 'We could not update your location. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -185,7 +191,7 @@ export default function App() {
       await driverStartTrip(session, selectedTrip.id)
       await refreshTrips(session)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start trip')
+      setError(toFriendlyMessage(err, 'We could not start this trip. Please try again.'))
       return
     } finally {
       setLoading(false)
@@ -201,7 +207,7 @@ export default function App() {
     }
     if (label === 'MAP') {
       if (!selectedTrip) {
-        RNAlert.alert('No active trip', 'When ops assigns a trip, open the Map tab for turn-by-turn style actions.')
+        RNAlert.alert('No active trip', 'When operations assigns a trip, open the Map tab for navigation actions.')
         return
       }
       setActiveScreen('navigation')

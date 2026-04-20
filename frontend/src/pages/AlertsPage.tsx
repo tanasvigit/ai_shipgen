@@ -7,9 +7,10 @@ interface AlertsPageProps {
   handleResolveAlert: (alertId: number) => Promise<void>
   handleRerouteAlert: (alertId: number) => Promise<void>
   handleReassignAlert: (alertId: number) => Promise<void>
+  actionError: string
 }
 
-function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert, handleRerouteAlert, handleReassignAlert }: AlertsPageProps) {
+function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert, handleRerouteAlert, handleReassignAlert, actionError }: AlertsPageProps) {
   return (
     <main className="pt-8 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -26,6 +27,7 @@ function AlertsPage({ alerts, unresolvedAlerts, handleResolveAlert, handleRerout
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <section className="lg:col-span-8 space-y-6">
+            {actionError ? <p className="text-sm font-semibold text-on-error-container bg-error-container px-4 py-3 rounded-xl">{actionError}</p> : null}
             {alerts.map((alert) => (
               <div key={alert.id} className="bg-surface-container-lowest rounded-xl p-6 transition-all hover:bg-surface-container-highest">
                 <div className="flex justify-between items-start mb-4">

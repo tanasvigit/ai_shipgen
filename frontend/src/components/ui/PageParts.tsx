@@ -6,6 +6,7 @@ interface MetricCardProps {
   sub: string
   icon: string
   danger?: boolean
+  onClick?: () => void
 }
 
 interface DetailProps {
@@ -49,9 +50,9 @@ interface InsightCardProps {
   text: string
 }
 
-export function MetricCard({ title, value, sub, icon, danger = false }: MetricCardProps) {
-  return (
-    <div className={`p-6 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between ${danger ? 'bg-error-container/40 border border-error/10' : 'bg-surface-container-lowest'}`}>
+export function MetricCard({ title, value, sub, icon, danger = false, onClick }: MetricCardProps) {
+  const inner = (
+    <>
       <div>
         <p className={`text-sm font-medium mb-1 ${danger ? 'text-on-error-container' : 'text-on-surface-variant'}`}>{title}</p>
         <h2 className={`text-3xl font-extrabold tracking-tight ${danger ? 'text-on-error-container' : 'text-on-surface'}`}>{value}</h2>
@@ -60,8 +61,19 @@ export function MetricCard({ title, value, sub, icon, danger = false }: MetricCa
       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${danger ? 'bg-error-container text-error' : 'bg-surface-container-low'}`}>
         <span className="material-symbols-outlined">{icon}</span>
       </div>
-    </div>
+    </>
   )
+  const shell = `p-6 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between ${
+    danger ? 'bg-error-container/40 border border-error/10' : 'bg-surface-container-lowest'
+  }`
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${shell} w-full text-left cursor-pointer hover:opacity-95 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}>
+        {inner}
+      </button>
+    )
+  }
+  return <div className={shell}>{inner}</div>
 }
 
 export function Detail({ label, value }: DetailProps) {

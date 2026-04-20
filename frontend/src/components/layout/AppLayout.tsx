@@ -10,10 +10,12 @@ interface AppLayoutProps {
   navItems: NavItem[]
   unresolvedAlertsCount: number
   onSelectScreen: (screen: Screen) => void
+  onLogout: () => void
+  sessionRole: string
   children: ReactNode
 }
 
-function AppLayout({ screen, navItems, unresolvedAlertsCount, onSelectScreen, children }: AppLayoutProps) {
+function AppLayout({ screen, navItems, unresolvedAlertsCount, onSelectScreen, onLogout, sessionRole, children }: AppLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   return (
@@ -24,10 +26,17 @@ function AppLayout({ screen, navItems, unresolvedAlertsCount, onSelectScreen, ch
         isSidebarCollapsed={isSidebarCollapsed}
         unresolvedAlertsCount={unresolvedAlertsCount}
         onSelectScreen={onSelectScreen}
+        onLogout={onLogout}
+        sessionRole={sessionRole}
       />
 
       <main className={`min-h-screen flex flex-col transition-all duration-300 min-w-0 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
-        <TopBar isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={() => setIsSidebarCollapsed((previous) => !previous)} />
+        <TopBar
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarCollapsed((previous) => !previous)}
+          onLogout={onLogout}
+          sessionRole={sessionRole}
+        />
         <div className="flex-1 min-w-0">{children}</div>
         <AppFooter />
       </main>

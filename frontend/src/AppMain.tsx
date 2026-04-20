@@ -12,6 +12,7 @@ import OrdersPage from './pages/OrdersPage'
 import AppLayout from './components/layout/AppLayout'
 import useShipgenData from './hooks/useShipgenData'
 import { clearSession, getStoredSession, login } from './services/authApi'
+import { DEFAULT_ERROR_AUTO_HIDE_MS, isBlockingMessage, userMessageFromUnknown } from './services/errorUtils'
 import {
   driverDeliveredTrip,
   driverReachedPickup,
@@ -23,7 +24,7 @@ import {
   ingestRawOrder,
   reportDriverIssue,
 } from './services/shipgenApi'
-import type { AuthSession, CreateOrderForm, FinanceSummary, NavItem, Screen, SystemReadiness, Trip } from './types'
+import type { AuthSession, CreateOrderForm, FinanceSummary, NavItem, OrdersListFilter, Screen, SystemReadiness, Trip } from './types'
 
 const initialOrder: CreateOrderForm = {
   pickupLocation: 'Chicago Logistics Hub',
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
 function AppMain() {
   const [session, setSession] = useState<AuthSession | null>(getStoredSession())
   const [screen, setScreen] = useState<Screen>('dashboard')
+  const [ordersFilter, setOrdersFilter] = useState<OrdersListFilter>('all')
   const [publicTrackingToken, setPublicTrackingToken] = useState<string | null>(null)
   const [publicTrackedTrip, setPublicTrackedTrip] = useState<Trip | null>(null)
   const [financeSummary, setFinanceSummary] = useState<FinanceSummary | null>(null)
@@ -51,6 +53,7 @@ function AppMain() {
   const [systemReadiness, setSystemReadiness] = useState<SystemReadiness | null>(null)
   const [form, setForm] = useState(initialOrder)
   const [rawOrderText, setRawOrderText] = useState('')
+  const [actionError, setActionError] = useState('')
   const {
     orders,
     drivers,
@@ -76,6 +79,11 @@ function AppMain() {
   } = useShipgenData(Boolean(session))
   const roleAwareNavItems =
     session?.role === 'driver' ? navItems.filter((item) => item.screen === 'driver-ops' || item.screen === 'tracking') : navItems
+
+  function openOrdersWithFilter(filter: OrdersListFilter) {
+    setOrdersFilter(filter)
+    setScreen('orders')
+  }
 
   useEffect(() => {
     if (session?.role === 'driver' && !['tracking', 'driver-ops'].includes(screen)) {
@@ -113,6 +121,20 @@ function AppMain() {
   }, [session])
 
   useEffect(() => {
+    if (!error) return
+    if (isBlockingMessage(error)) return
+    const timer = window.setTimeout(() => setError(''), DEFAULT_ERROR_AUTO_HIDE_MS)
+    return () => window.clearTimeout(timer)
+  }, [error, setError])
+
+  useEffect(() => {
+    if (!actionError) return
+    if (isBlockingMessage(actionError)) return
+    const timer = window.setTimeout(() => setActionError(''), DEFAULT_ERROR_AUTO_HIDE_MS)
+    return () => window.clearTimeout(timer)
+  }, [actionError])
+
+  useEffect(() => {
     if (!session) return
     fetchSystemReadiness()
       .then((readiness) => setSystemReadiness(readiness))
@@ -131,60 +153,104 @@ function AppMain() {
 
   async function handleCreateOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setActionError('')
     try {
       await createOrderAndRefresh(form)
       setScreen('auto-trip')
-    } catch {
-      // Errors are surfaced via hook-managed UI state.
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not create the order. Please try again.'))
+      setError('')
     }
   }
 
   async function handleApproveTrip(tripId = selectedTrip?.id) {
+    setActionError('')
     try {
       await approveTripAndRefresh(tripId)
       setScreen('tracking')
-    } catch {
-      // Errors are surfaced via hook-managed UI state.
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not start this trip. Please try again.'))
+      setError('')
     }
   }
 
   async function handleResolveAlert(alertId: number) {
-    await resolveAlertAndRefresh(alertId)
+    setActionError('')
+    try {
+      await resolveAlertAndRefresh(alertId)
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not resolve this alert. Please try again.'))
+      setError('')
+    }
   }
 
   async function handleRejectTrip(tripId: number) {
-    await rejectTripAndRefresh(tripId)
-    setScreen('dashboard')
+    setActionError('')
+    try {
+      await rejectTripAndRefresh(tripId)
+      setScreen('dashboard')
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not reject this trip. Please try again.'))
+    }
   }
 
   async function handleRegenerateTrip(tripId: number) {
-    await regenerateTripAndRefresh(tripId)
+    setActionError('')
+    try {
+      await regenerateTripAndRefresh(tripId)
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not regenerate this trip. Please try again.'))
+    }
   }
 
   async function handleRerouteAlert(alertId: number) {
-    await rerouteAlertAndRefresh(alertId)
+    setActionError('')
+    try {
+      await rerouteAlertAndRefresh(alertId)
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not reroute this trip. Please try again.'))
+    }
   }
 
   async function handleReassignAlert(alertId: number) {
-    await reassignAlertAndRefresh(alertId)
+    setActionError('')
+    try {
+      await reassignAlertAndRefresh(alertId)
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not reassign this trip. Please try again.'))
+    }
   }
 
   async function handleIngestRawOrder() {
     if (!rawOrderText.trim()) return
-    await ingestRawOrder(rawOrderText)
-    setRawOrderText('')
-    await refreshData()
-    setScreen('auto-trip')
+    setActionError('')
+    try {
+      await ingestRawOrder(rawOrderText)
+      setRawOrderText('')
+      await refreshData()
+      setScreen('auto-trip')
+      setError('')
+    } catch (err) {
+      setActionError(userMessageFromUnknown(err, 'We could not process this message. Please try again.'))
+    }
   }
 
   async function handleDriverStart(tripId: number) {
     setIsLoading(true)
-    setError('')
+    setActionError('')
     try {
       await driverStartTrip(tripId)
       await refreshData()
+      setError('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Start trip failed')
+      setActionError(userMessageFromUnknown(err, 'We could not start this trip. Please try again.'))
     } finally {
       setIsLoading(false)
     }
@@ -192,12 +258,13 @@ function AppMain() {
 
   async function handleDriverReachedPickup(tripId: number) {
     setIsLoading(true)
-    setError('')
+    setActionError('')
     try {
       await driverReachedPickup(tripId)
       await refreshData()
+      setError('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Reached pickup failed')
+      setActionError(userMessageFromUnknown(err, 'We could not confirm pickup yet. Please try again.'))
     } finally {
       setIsLoading(false)
     }
@@ -205,12 +272,13 @@ function AppMain() {
 
   async function handleDriverDelivered(tripId: number) {
     setIsLoading(true)
-    setError('')
+    setActionError('')
     try {
       await driverDeliveredTrip(tripId)
       await refreshData()
+      setError('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delivered failed')
+      setActionError(userMessageFromUnknown(err, 'We could not mark this trip delivered. Please try again.'))
     } finally {
       setIsLoading(false)
     }
@@ -218,12 +286,13 @@ function AppMain() {
 
   async function handleDriverReportIssue(tripId: number, message: string) {
     setIsLoading(true)
-    setError('')
+    setActionError('')
     try {
       await reportDriverIssue(tripId, message)
       await refreshData()
+      setError('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Report issue failed')
+      setActionError(userMessageFromUnknown(err, 'We could not report this issue. Please try again.'))
     } finally {
       setIsLoading(false)
     }
@@ -243,12 +312,9 @@ function AppMain() {
       navItems={roleAwareNavItems}
       unresolvedAlertsCount={unresolvedAlerts.length}
       onSelectScreen={setScreen}
+      onLogout={handleLogout}
+      sessionRole={session.role}
     >
-      <div className="px-8 pt-3 flex justify-end">
-        <button onClick={handleLogout} className="text-xs font-semibold text-on-surface-variant hover:text-on-surface underline underline-offset-4">
-          Logout ({session.role})
-        </button>
-      </div>
       {error ? (
         <div className="px-8 pt-4">
           <p className="text-sm font-semibold text-on-error-container bg-error-container px-4 py-3 rounded-xl border border-red-200">{error}</p>
@@ -282,9 +348,20 @@ function AppMain() {
           handleIngestRawOrder={handleIngestRawOrder}
           approvalMode={approvalMode}
           isLoading={isLoading}
+          openOrdersWithFilter={openOrdersWithFilter}
+          actionError={actionError}
         />
       )}
-      {screen === 'orders' && <OrdersPage orders={orders} trips={trips} setScreen={setScreen} setSelectedTripId={setSelectedTripId} />}
+      {screen === 'orders' && (
+        <OrdersPage
+          orders={orders}
+          trips={trips}
+          ordersFilter={ordersFilter}
+          setOrdersFilter={setOrdersFilter}
+          setScreen={setScreen}
+          setSelectedTripId={setSelectedTripId}
+        />
+      )}
       {screen === 'auto-trip' && (
         <AutoTripPage
           selectedTrip={selectedTrip}
@@ -293,6 +370,7 @@ function AppMain() {
           handleRegenerateTrip={handleRegenerateTrip}
           setScreen={setScreen}
           isLoading={isLoading}
+          actionError={actionError}
         />
       )}
       {screen === 'tracking' && <TrackingPage selectedTrip={selectedTrip} trips={trips} setSelectedTripId={setSelectedTripId} />}
@@ -303,6 +381,7 @@ function AppMain() {
           handleResolveAlert={handleResolveAlert}
           handleRerouteAlert={handleRerouteAlert}
           handleReassignAlert={handleReassignAlert}
+          actionError={actionError}
         />
       )}
       {screen === 'profit' && <ProfitPage trips={trips} summary={financeSummary} />}
@@ -316,6 +395,7 @@ function AppMain() {
           onDelivered={handleDriverDelivered}
           onReportIssue={handleDriverReportIssue}
           isLoading={isLoading}
+          actionError={actionError}
         />
       )}
     </AppLayout>

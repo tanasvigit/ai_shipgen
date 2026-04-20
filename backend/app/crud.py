@@ -7,6 +7,7 @@ from . import models, schemas
 from .core.config import settings
 from .core.security import create_public_tracking_token
 from .core.security import hash_password
+from .errors import DomainError
 from .services import assignment, communication, finance, prediction, routing
 from .workers.queue import enqueue_job_sync
 
@@ -243,7 +244,13 @@ def list_driver_trips(db: Session, driver_id: int) -> list[models.Trip]:
 
 def approve_trip(db: Session, trip: models.Trip) -> models.Trip:
     if not can_transition(trip.status, "in_transit"):
-        raise ValueError(f"Cannot approve trip in '{trip.status}' state")
+        raise DomainError(
+            status=409,
+            code="TRIP_INVALID_STATE",
+            message="Trip cannot be started from its current status.",
+            category="business_rule",
+            details={"currentStatus": trip.status, "requiredStatus": "assigned", "action": "approve"},
+        )
     trip.status = "in_transit"
     if trip.in_transit_started_at is None:
         trip.in_transit_started_at = datetime.now(timezone.utc)
@@ -259,7 +266,13 @@ def approve_trip(db: Session, trip: models.Trip) -> models.Trip:
 
 def complete_trip(db: Session, trip: models.Trip) -> models.Trip:
     if not can_transition(trip.status, "completed"):
-        raise ValueError(f"Cannot complete trip in '{trip.status}' state")
+        raise DomainError(
+            status=409,
+            code="TRIP_INVALID_STATE",
+            message="Trip cannot be completed from its current status.",
+            category="business_rule",
+            details={"currentStatus": trip.status, "requiredStatus": "in_transit", "action": "complete"},
+        )
     trip.status = "completed"
     trip.last_updated = datetime.now(timezone.utc)
     if trip.driver_id is not None:
@@ -510,7 +523,13 @@ def emit_event(
 
 def reject_trip(db: Session, trip: models.Trip, actor: str) -> models.Trip:
     if not can_transition(trip.status, "rejected"):
-        raise ValueError(f"Cannot reject trip in '{trip.status}' state")
+        raise DomainError(
+            status=409,
+            code="TRIP_INVALID_STATE",
+            message="Trip cannot be rejected from its current status.",
+            category="business_rule",
+            details={"currentStatus": trip.status, "action": "reject"},
+        )
     trip.status = "rejected"
     trip.last_updated = datetime.now(timezone.utc)
     if trip.driver_id is not None:
@@ -581,7 +600,13 @@ def regenerate_trip_plan(db: Session, trip: models.Trip, actor: str) -> models.T
 def reroute_trip_from_alert(db: Session, alert: models.Alert, actor: str) -> models.Trip:
     trip = get_trip(db, alert.trip_id)
     if trip is None:
-        raise ValueError("Trip not found")
+        raise DomainError(
+            status=404,
+            code="TRIP_NOT_FOUND",
+            message="We could not find that trip.",
+            category="not_found",
+            details={"tripId": alert.trip_id},
+        )
     order = trip.order or db.get(models.Order, trip.order_id)
     pickup = order.pickup_location if order else "Pickup"
     drop = order.drop_location if order else "Drop"
@@ -608,7 +633,13 @@ def reroute_trip_from_alert(db: Session, alert: models.Alert, actor: str) -> mod
 def reassign_trip_from_alert(db: Session, alert: models.Alert, actor: str) -> models.Trip:
     trip = get_trip(db, alert.trip_id)
     if trip is None:
-        raise ValueError("Trip not found")
+        raise DomainError(
+            status=404,
+            code="TRIP_NOT_FOUND",
+            message="We could not find that trip.",
+            category="not_found",
+            details={"tripId": alert.trip_id},
+        )
     if trip.driver_id is not None:
         previous_driver = db.get(models.Driver, trip.driver_id)
         if previous_driver is not None:
@@ -665,7 +696,13 @@ def get_finance_summary(db: Session) -> dict:
 
 def driver_start_trip(db: Session, trip: models.Trip, actor: str) -> models.Trip:
     if trip.status != "assigned":
-        raise ValueError(f"Cannot start trip in '{trip.status}' state")
+        raise DomainError(
+            status=409,
+            code="TRIP_INVALID_STATE",
+            message="Trip has already started or is unavailable.",
+            category="business_rule",
+            details={"currentStatus": trip.status, "requiredStatus": "assigned", "action": "driver_start"},
+        )
     trip.status = "in_transit"
     trip.in_transit_started_at = datetime.now(timezone.utc)
     trip.last_updated = datetime.now(timezone.utc)
@@ -678,7 +715,13 @@ def driver_start_trip(db: Session, trip: models.Trip, actor: str) -> models.Trip
 
 def driver_reached_pickup(db: Session, trip: models.Trip, actor: str) -> models.Trip:
     if trip.status != "in_transit":
-        raise ValueError(f"Cannot mark pickup in '{trip.status}' state")
+        raise DomainError(
+            status=409,
+            code="TRIP_INVALID_STATE",
+            message="Pickup confirmation is available only after trip start.",
+            category="business_rule",
+            details={"currentStatus": trip.status, "requiredStatus": "in_transit", "action": "driver_pickup"},
+        )
     trip.pickup_reached_at = datetime.now(timezone.utc)
     trip.last_updated = datetime.now(timezone.utc)
     log_trip_audit(db, trip, action="driver_reached_pickup", actor=actor)

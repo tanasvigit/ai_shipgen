@@ -8,9 +8,10 @@ interface AutoTripPageProps {
   handleRegenerateTrip: (tripId: number) => Promise<void>
   setScreen: (screen: Screen) => void
   isLoading: boolean
+  actionError: string
 }
 
-function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handleRegenerateTrip, setScreen, isLoading }: AutoTripPageProps) {
+function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handleRegenerateTrip, setScreen, isLoading, actionError }: AutoTripPageProps) {
   if (!selectedTrip) {
     return <div className="p-8 text-on-surface-variant">No trip yet. Create an order from Dashboard.</div>
   }
@@ -113,6 +114,7 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handl
       </div>
 
       <footer className="mt-12 flex flex-col items-center gap-4 py-8 border-t border-outline-variant/10">
+        {actionError ? <p className="w-full max-w-2xl text-sm font-semibold text-on-error-container bg-error-container px-4 py-3 rounded-xl">{actionError}</p> : null}
         <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             disabled={isLoading}

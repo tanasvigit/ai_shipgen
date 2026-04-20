@@ -1,5 +1,8 @@
 export type Screen = 'dashboard' | 'orders' | 'auto-trip' | 'tracking' | 'alerts' | 'profit' | 'driver-ops' | 'customer-tracking'
 
+/** Orders list: Active = non-completed trip; Completed = completed trip; Other = no trip yet */
+export type OrdersListFilter = 'all' | 'active' | 'completed' | 'other'
+
 export interface NavItem {
   label: string
   screen: Screen

@@ -1,6 +1,7 @@
 import asyncio
+import uuid
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from . import crud, models, schemas
 from .core.config import settings
 from .core.security import create_access_token, decode_public_tracking_token, get_current_user, require_role, verify_password
 from .database import SessionLocal, engine, get_db
+from .errors import DomainError, install_error_handlers, raise_api_error
 from .ml.dataset_export import export_learning_dataset
 from .ml.evaluate import run_offline_evaluation
 from .services import communication, routing
@@ -26,6 +28,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def attach_request_id(request: Request, call_next):
+    request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex[:12]}"
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["x-request-id"] = request_id
+    return response
+
+
+install_error_handlers(app)
 
 
 def ensure_schema_is_migrated() -> None:
@@ -110,7 +124,7 @@ def favicon() -> None:
 def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)) -> dict:
     user = crud.get_user_by_username(db, payload.username)
     if user is None or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise_api_error(status=401, code="AUTH_INVALID_CREDENTIALS", message="Sign-in failed. Check your username and password.")
     token = create_access_token(user)
     return {"accessToken": token, "role": user.role, "driverId": user.driver_id}
 
@@ -124,9 +138,9 @@ def _assert_driver_trip_access(current_user: models.User, trip: models.Trip) -> 
     if current_user.role != "driver":
         return
     if current_user.driver_id is None:
-        raise HTTPException(status_code=403, detail="Driver profile is not linked")
+        raise_api_error(status=403, code="DRIVER_PROFILE_MISSING", message="Your driver profile is not linked. Contact operations.")
     if trip.driver_id != current_user.driver_id:
-        raise HTTPException(status_code=403, detail="Driver is not assigned to this trip")
+        raise_api_error(status=403, code="DRIVER_NOT_ASSIGNED", message="This trip is assigned to another driver account.")
 
 
 @app.post("/orders")
@@ -240,8 +254,8 @@ def approve_trip(
         trip = crud.approve_trip(db, trip)
         crud.log_trip_audit(db, trip, action="approved", actor=_current_user.username)
         db.commit()
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return {"id": trip.id, "status": trip.status}
 
 
@@ -259,8 +273,8 @@ def complete_trip(
         trip = crud.complete_trip(db, trip)
         crud.log_trip_audit(db, trip, action="completed", actor=_current_user.username)
         db.commit()
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return {"id": trip.id, "status": trip.status}
 
 
@@ -299,8 +313,8 @@ def reroute_alert(
         raise HTTPException(status_code=404, detail="Alert not found")
     try:
         trip = crud.reroute_trip_from_alert(db, alert, actor=_current_user.username)
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 
@@ -315,8 +329,8 @@ def reassign_alert(
         raise HTTPException(status_code=404, detail="Alert not found")
     try:
         trip = crud.reassign_trip_from_alert(db, alert, actor=_current_user.username)
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 
@@ -436,8 +450,8 @@ def reject_trip(
         raise HTTPException(status_code=404, detail="Trip not found")
     try:
         trip = crud.reject_trip(db, trip, actor=_current_user.username)
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 
@@ -466,8 +480,8 @@ def driver_start_trip(
     _assert_driver_trip_access(_current_user, trip)
     try:
         trip = crud.driver_start_trip(db, trip, actor=_current_user.username)
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 
@@ -483,8 +497,8 @@ def driver_reached_pickup(
     _assert_driver_trip_access(_current_user, trip)
     try:
         trip = crud.driver_reached_pickup(db, trip, actor=_current_user.username)
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 
@@ -502,8 +516,8 @@ def driver_delivered_trip(
         trip = crud.complete_trip(db, trip)
         crud.log_trip_audit(db, trip, action="driver_delivered_trip", actor=_current_user.username)
         db.commit()
-    except ValueError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+    except DomainError:
+        raise
     return crud.serialize_trip(trip)
 
 

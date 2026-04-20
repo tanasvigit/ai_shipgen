@@ -1,4 +1,5 @@
 import type { AuthSession } from '../types'
+import { readApiError } from './errorUtils'
 
 const API_BASE = 'http://127.0.0.1:8000'
 const AUTH_STORAGE_KEY = 'shipgen-auth-session'
@@ -23,7 +24,10 @@ export async function login(username: string, password: string): Promise<AuthSes
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   })
-  if (!response.ok) throw new Error('Invalid credentials')
+  if (!response.ok) {
+    const parsed = await readApiError(response, 'Sign-in failed. Please check your credentials.')
+    throw new Error(parsed.message)
+  }
   const session = (await response.json()) as AuthSession
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session))
   return session

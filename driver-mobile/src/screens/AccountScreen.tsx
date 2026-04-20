@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { fetchAuthMe, fetchMyDriverProfile } from '../api/client'
+import { DEFAULT_ERROR_AUTO_HIDE_MS, isBlockingMessage, toFriendlyMessage } from '../api/errorUtils'
 import AppButton from '../components/AppButton'
 import Card from '../components/Card'
 import type { AuthMe, AuthSession, DriverProfile } from '../types'
@@ -25,7 +26,7 @@ export default function AccountScreen({ session, onLogout }: AccountScreenProps)
       setMe(meRes)
       setDriver(driverRes)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load profile')
+      setError(toFriendlyMessage(e, 'We could not load your profile right now.'))
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -36,6 +37,13 @@ export default function AccountScreen({ session, onLogout }: AccountScreenProps)
     setLoading(true)
     load()
   }, [load])
+
+  useEffect(() => {
+    if (!error) return
+    if (isBlockingMessage(error)) return
+    const timer = setTimeout(() => setError(''), DEFAULT_ERROR_AUTO_HIDE_MS)
+    return () => clearTimeout(timer)
+  }, [error])
 
   const onRefresh = useCallback(() => {
     setRefreshing(true)

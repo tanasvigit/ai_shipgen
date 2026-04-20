@@ -12,6 +12,7 @@ interface DriverOpsPageProps {
   onDelivered: (tripId: number) => Promise<void>
   onReportIssue: (tripId: number, message: string) => Promise<void>
   isLoading: boolean
+  actionError: string
 }
 
 function DriverOpsPage({
@@ -23,6 +24,7 @@ function DriverOpsPage({
   onDelivered,
   onReportIssue,
   isLoading,
+  actionError,
 }: DriverOpsPageProps) {
   const [issueText, setIssueText] = useState('')
   const actionableTrips = trips.filter((trip) => trip.status !== 'completed')
@@ -70,6 +72,7 @@ function DriverOpsPage({
 
           <aside className="xl:col-span-4 space-y-4">
             <section className="bg-surface-container-lowest border border-black/5 rounded-xl p-5 space-y-4">
+              {actionError ? <p className="text-sm font-semibold text-on-error-container bg-error-container px-3 py-2 rounded-lg">{actionError}</p> : null}
               <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Current Trip</span>
                 <select

@@ -61,7 +61,7 @@ export default function TripDetailsScreen({
 
       {exceptionSummary ? (
         <View style={styles.warnBanner}>
-          <Text style={styles.warnTitle}>Exception watch</Text>
+          <Text style={styles.warnTitle}>Trip attention needed</Text>
           <Text style={styles.warnText}>{exceptionSummary}</Text>
         </View>
       ) : null}

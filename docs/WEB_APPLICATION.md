@@ -124,3 +124,5 @@ See `run.txt` in the repo root for the full sequence (migrations, health checks,
 - **409 on driver actions** — trip may be in the wrong status for that action; check trip status on Dashboard or Tracking.
 
 This document is scoped to the **website**; for the **driver mobile app**, see **`docs/DRIVER_MOBILE_APP.md`**.
+
+Error contract and user-message standards are documented in **`docs/ERROR_MESSAGES.md`**.

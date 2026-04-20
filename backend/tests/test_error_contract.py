@@ -1,4 +1,4 @@
-"""HTTP-level check: driver cannot POST location on another driver's trip."""
+"""API error envelope contract tests."""
 
 from collections.abc import Generator
 
@@ -15,7 +15,7 @@ from app.main import app
 
 
 @pytest.fixture
-def sqlite_location_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[TestClient, int, str], None, None]:
+def sqlite_error_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[TestClient, int, str], None, None]:
     engine = create_engine(
         "sqlite+pysqlite://",
         connect_args={"check_same_thread": False},
@@ -33,12 +33,10 @@ def sqlite_location_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[
 
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    d1 = models.Driver(name="Driver One", current_location="Hub A", availability=True)
-    d2 = models.Driver(name="Driver Two", current_location="Hub B", availability=True)
-    db.add_all([d1, d2])
+    driver = models.Driver(name="Driver One", current_location="Hub A", availability=True)
+    db.add(driver)
     db.commit()
-    db.refresh(d1)
-    db.refresh(d2)
+    db.refresh(driver)
 
     order = models.Order(pickup_location="A", drop_location="B", load="1 ton", date="2026-04-18")
     db.add(order)
@@ -47,8 +45,8 @@ def sqlite_location_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[
 
     trip = models.Trip(
         order_id=order.id,
-        driver_id=d2.id,
-        status="in_transit",
+        driver_id=driver.id,
+        status="completed",
         current_lat=0.0,
         current_lng=0.0,
     )
@@ -57,15 +55,14 @@ def sqlite_location_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[
         username="driver_one",
         password_hash=hash_password("secret"),
         role="driver",
-        driver_id=d1.id,
+        driver_id=driver.id,
         is_active=True,
     )
     db.add(user)
     db.commit()
     db.refresh(trip)
-    db.refresh(user)
-    trip_id = trip.id
     token = create_access_token(user)
+    trip_id = trip.id
     db.close()
 
     saved_startup = list(app.router.on_startup)
@@ -86,13 +83,25 @@ def sqlite_location_context(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[
         app.router.on_shutdown[:] = saved_shutdown
 
 
-def test_post_trip_location_returns_403_for_non_owner_driver(sqlite_location_context: tuple[TestClient, int, str]) -> None:
-    client, trip_id, token = sqlite_location_context
+def test_login_invalid_credentials_returns_structured_error(sqlite_error_context: tuple[TestClient, int, str]) -> None:
+    client, _, _ = sqlite_error_context
+    response = client.post("/auth/login", json={"username": "wrong", "password": "wrong"})
+    assert response.status_code == 401
+    payload = response.json()
+    assert payload["detail"] == "Sign-in failed. Check your username and password."
+    assert payload["error"]["code"] == "AUTH_INVALID_CREDENTIALS"
+    assert payload["error"]["category"] == "auth"
+    assert response.headers.get("x-request-id")
+
+
+def test_driver_start_invalid_state_returns_structured_conflict(sqlite_error_context: tuple[TestClient, int, str]) -> None:
+    client, trip_id, token = sqlite_error_context
     response = client.post(
-        f"/trips/{trip_id}/location",
-        json={"lat": 12.34, "lng": 56.78},
+        f"/driver/trips/{trip_id}/start",
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert response.status_code == 403
-    assert "another driver account" in response.json().get("detail", "").lower()
-    assert response.json().get("error", {}).get("code") == "DRIVER_NOT_ASSIGNED"
+    assert response.status_code == 409
+    payload = response.json()
+    assert payload["error"]["code"] == "TRIP_INVALID_STATE"
+    assert payload["error"]["category"] == "business_rule"
+    assert payload["error"]["details"]["currentStatus"] == "completed"

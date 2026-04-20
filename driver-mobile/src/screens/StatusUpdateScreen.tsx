@@ -74,7 +74,7 @@ export default function StatusUpdateScreen({
       </View>
 
       <AppButton label="Report Issue" onPress={onReportIssue} variant="secondary" style={styles.reportBtn} disabled={isLoading} />
-      <Text style={styles.syncText}>Updates are automatically synced to system</Text>
+      <Text style={styles.syncText}>Updates are shared automatically.</Text>
     </View>
   )
 }

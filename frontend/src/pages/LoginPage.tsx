@@ -18,8 +18,8 @@ function LoginPage({ onLogin }: LoginPageProps) {
     setError('')
     try {
       await onLogin(username, password)
-    } catch {
-      setError('Login failed. Please check your credentials.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed. Please check your credentials.')
     } finally {
       setIsSubmitting(false)
     }

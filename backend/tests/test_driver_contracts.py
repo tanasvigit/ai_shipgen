@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app import crud, models
 from app.database import Base
+from app.errors import DomainError
 
 
 def _build_db():
@@ -23,7 +24,7 @@ def test_driver_start_requires_assigned() -> None:
         try:
             crud.driver_start_trip(db, trip, actor="driver1")
             raised = False
-        except ValueError:
+        except DomainError:
             raised = True
         assert raised is True
 
@@ -38,7 +39,7 @@ def test_driver_reached_pickup_requires_in_transit() -> None:
         try:
             crud.driver_reached_pickup(db, trip, actor="driver1")
             raised = False
-        except ValueError:
+        except DomainError:
             raised = True
         assert raised is True
 

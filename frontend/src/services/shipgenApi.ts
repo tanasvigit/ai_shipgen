@@ -8,6 +8,8 @@ interface CreateOrderResponse {
   trip?: {
     id?: number
   }
+  nlpEngineUsed?: 'openai' | 'regex'
+  nlpErrorReason?: string | null
 }
 
 export interface ShipgenSnapshot {

@@ -1,0 +1,7 @@
+office  git@103.138.96.246:logistics-shipgen/logistics-dev.git (fetch)
+office  git@103.138.96.246:logistics-shipgen/logistics-dev.git (push) 
+origin  https://github.com/tanasvigit/ai_shipgen.git (fetch)
+origin  https://github.com/tanasvigit/ai_shipgen.git (push)
+
+
+iam maintaining this two repos. one is github(origin remote) and another is gitlab(office remote)

@@ -24,7 +24,7 @@ import {
   ingestRawOrder,
   reportDriverIssue,
 } from './services/shipgenApi'
-import type { AuthSession, CreateOrderForm, FinanceSummary, NavItem, OrdersListFilter, Screen, SystemReadiness, Trip } from './types'
+import type { AlertsListFilter, AuthSession, CreateOrderForm, FinanceSummary, NavItem, OrdersListFilter, Screen, SystemReadiness, Trip } from './types'
 
 const initialOrder: CreateOrderForm = {
   pickupLocation: 'Chicago Logistics Hub',
@@ -35,6 +35,7 @@ const initialOrder: CreateOrderForm = {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', screen: 'dashboard', icon: 'grid_view' },
+  { label: 'Orders', screen: 'orders', icon: 'receipt_long' },
   { label: 'Shipments', screen: 'auto-trip', icon: 'local_shipping' },
   { label: 'Routes', screen: 'tracking', icon: 'route' },
   { label: 'Alerts', screen: 'alerts', icon: 'warning' },
@@ -46,6 +47,7 @@ function AppMain() {
   const [session, setSession] = useState<AuthSession | null>(getStoredSession())
   const [screen, setScreen] = useState<Screen>('dashboard')
   const [ordersFilter, setOrdersFilter] = useState<OrdersListFilter>('all')
+  const [alertsFilter, setAlertsFilter] = useState<AlertsListFilter>('all')
   const [publicTrackingToken, setPublicTrackingToken] = useState<string | null>(null)
   const [publicTrackedTrip, setPublicTrackedTrip] = useState<Trip | null>(null)
   const [financeSummary, setFinanceSummary] = useState<FinanceSummary | null>(null)
@@ -83,6 +85,11 @@ function AppMain() {
   function openOrdersWithFilter(filter: OrdersListFilter) {
     setOrdersFilter(filter)
     setScreen('orders')
+  }
+
+  function openAlertsWithFilter(filter: AlertsListFilter) {
+    setAlertsFilter(filter)
+    setScreen('alerts')
   }
 
   useEffect(() => {
@@ -349,6 +356,7 @@ function AppMain() {
           approvalMode={approvalMode}
           isLoading={isLoading}
           openOrdersWithFilter={openOrdersWithFilter}
+          openAlertsWithFilter={openAlertsWithFilter}
           actionError={actionError}
         />
       )}
@@ -356,8 +364,6 @@ function AppMain() {
         <OrdersPage
           orders={orders}
           trips={trips}
-          ordersFilter={ordersFilter}
-          setOrdersFilter={setOrdersFilter}
           setScreen={setScreen}
           setSelectedTripId={setSelectedTripId}
         />
@@ -378,6 +384,8 @@ function AppMain() {
         <AlertsPage
           alerts={alerts}
           unresolvedAlerts={unresolvedAlerts}
+          alertsFilter={alertsFilter}
+          setAlertsFilter={setAlertsFilter}
           handleResolveAlert={handleResolveAlert}
           handleRerouteAlert={handleRerouteAlert}
           handleReassignAlert={handleReassignAlert}

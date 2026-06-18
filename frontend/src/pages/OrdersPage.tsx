@@ -1,42 +1,48 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useMemo } from 'react'
-import type { Order, OrdersListFilter, Screen, Trip } from '../types'
+import { useEffect, useMemo, useState } from 'react'
+import type { Order, Screen, Trip, TripStatus } from '../types'
 
 interface OrdersPageProps {
   orders: Order[]
   trips: Trip[]
-  ordersFilter: OrdersListFilter
-  setOrdersFilter: Dispatch<SetStateAction<OrdersListFilter>>
   setScreen: (screen: Screen) => void
   setSelectedTripId: Dispatch<SetStateAction<number | null>>
 }
 
-function bucketForOrder(order: Order, trips: Trip[]): OrdersListFilter {
-  const trip = trips.find((t) => t.orderId === order.id)
-  if (!trip) return 'other'
-  if (trip.status === 'completed') return 'completed'
-  return 'active'
-}
-
-function orderMatchesFilter(order: Order, trips: Trip[], filter: OrdersListFilter): boolean {
-  if (filter === 'all') return true
-  return bucketForOrder(order, trips) === filter
-}
-
-const FILTER_OPTIONS: { id: OrdersListFilter; label: string; hint: string }[] = [
-  { id: 'all', label: 'All', hint: 'Every order' },
-  { id: 'active', label: 'Active', hint: 'Trip not completed' },
-  { id: 'completed', label: 'Completed', hint: 'Trip done' },
-  { id: 'other', label: 'Other', hint: 'No trip yet' },
+const TRIP_STATUS_OPTIONS: Array<{ id: 'all' | TripStatus; label: string }> = [
+  { id: 'all', label: 'All statuses' },
+  { id: 'created', label: 'Created' },
+  { id: 'assigned', label: 'Assigned' },
+  { id: 'approved', label: 'Approved' },
+  { id: 'in_transit', label: 'In Transit' },
+  { id: 'completed', label: 'Completed' },
 ]
 
-function OrdersPage({ orders, trips, ordersFilter, setOrdersFilter, setScreen, setSelectedTripId }: OrdersPageProps) {
+function OrdersPage({ orders, trips, setScreen, setSelectedTripId }: OrdersPageProps) {
+  const ORDERS_PER_PAGE = 10
+  const [ordersPage, setOrdersPage] = useState(1)
+  const [tripStatusFilter, setTripStatusFilter] = useState<'all' | TripStatus>('all')
   const filteredOrders = useMemo(
-    () => orders.filter((order) => orderMatchesFilter(order, trips, ordersFilter)),
-    [orders, trips, ordersFilter],
+    () =>
+      orders.filter((order) => {
+        if (tripStatusFilter === 'all') return true
+        const orderTrip = trips.find((trip) => trip.orderId === order.id)
+        return orderTrip?.status === tripStatusFilter
+      }),
+    [orders, trips, tripStatusFilter],
   )
+  const totalOrdersPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE))
+  const pagedOrders = useMemo(() => {
+    const page = Math.min(ordersPage, totalOrdersPages)
+    const start = (page - 1) * ORDERS_PER_PAGE
+    return filteredOrders.slice(start, start + ORDERS_PER_PAGE)
+  }, [filteredOrders, ordersPage, totalOrdersPages])
 
-  const filterHint = FILTER_OPTIONS.find((f) => f.id === ordersFilter)?.hint ?? ''
+  const currentOrdersPage = Math.min(ordersPage, totalOrdersPages)
+
+  useEffect(() => {
+    setOrdersPage(1)
+  }, [tripStatusFilter])
 
   return (
     <main className="p-4 sm:p-6 lg:p-8">
@@ -46,13 +52,17 @@ function OrdersPage({ orders, trips, ordersFilter, setOrdersFilter, setScreen, s
             <h1 className="font-headline text-3xl sm:text-4xl font-extrabold tracking-tight text-on-surface">All Orders</h1>
             <p className="text-on-surface-variant font-medium">Complete list of auto-created shipment orders.</p>
             <p className="text-xs text-on-surface-variant mt-2">
-              Showing <span className="font-bold text-on-surface">{filteredOrders.length}</span> of {orders.length} orders
-              {ordersFilter !== 'all' ? <span className="text-on-surface-variant"> · {filterHint}</span> : null}
+              Showing{' '}
+              <span className="font-bold text-on-surface">
+                {filteredOrders.length === 0 ? 0 : (currentOrdersPage - 1) * ORDERS_PER_PAGE + 1}-
+                {Math.min(currentOrdersPage * ORDERS_PER_PAGE, filteredOrders.length)}
+              </span>{' '}
+              of {filteredOrders.length} orders
             </p>
           </div>
           <button
             onClick={() => {
-              setOrdersFilter('all')
+              setTripStatusFilter('all')
               setScreen('dashboard')
             }}
             className="self-start sm:self-auto px-4 py-2 rounded-lg border border-outline-variant/30 text-sm font-semibold hover:bg-surface-container-low"
@@ -61,21 +71,22 @@ function OrdersPage({ orders, trips, ordersFilter, setOrdersFilter, setScreen, s
           </button>
         </header>
 
-        <div className="flex flex-wrap gap-2">
-          {FILTER_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setOrdersFilter(opt.id)}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide border transition-colors ${
-                ordersFilter === opt.id
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/30 hover:bg-surface-container-low'
-              }`}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-on-surface-variant">Filter orders by trip status</span>
+          <label className="text-xs font-semibold text-on-surface-variant flex items-center gap-2">
+            Trip Status
+            <select
+              value={tripStatusFilter}
+              onChange={(event) => setTripStatusFilter(event.target.value as 'all' | TripStatus)}
+              className="h-9 rounded-lg border border-outline-variant/30 px-3 bg-surface-container-lowest text-xs font-semibold"
             >
-              {opt.label}
-            </button>
-          ))}
+              {TRIP_STATUS_OPTIONS.map((statusOption) => (
+                <option key={statusOption.id} value={statusOption.id}>
+                  {statusOption.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-black/5">
@@ -93,7 +104,7 @@ function OrdersPage({ orders, trips, ordersFilter, setOrdersFilter, setScreen, s
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {filteredOrders.map((order) => {
+                {pagedOrders.map((order) => {
                   const orderTrip = trips.find((trip) => trip.orderId === order.id)
                   return (
                     <tr key={order.id} className="hover:bg-surface-container-low transition-colors">
@@ -126,6 +137,35 @@ function OrdersPage({ orders, trips, ordersFilter, setOrdersFilter, setScreen, s
               </tbody>
             </table>
           </div>
+          {filteredOrders.length > 0 ? (
+            <div className="px-6 py-4 border-t border-black/5 flex items-center justify-between gap-3">
+              <p className="text-xs text-on-surface-variant">
+                Showing {filteredOrders.length === 0 ? 0 : (currentOrdersPage - 1) * ORDERS_PER_PAGE + 1}-
+                {Math.min(currentOrdersPage * ORDERS_PER_PAGE, filteredOrders.length)} of {filteredOrders.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrdersPage((current) => Math.max(1, current - 1))}
+                  disabled={currentOrdersPage <= 1}
+                  className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+                >
+                  Previous
+                </button>
+                <span className="text-xs font-semibold text-on-surface-variant">
+                  Page {currentOrdersPage} / {totalOrdersPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setOrdersPage((current) => Math.min(totalOrdersPages, current + 1))}
+                  disabled={currentOrdersPage >= totalOrdersPages}
+                  className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
           {orders.length === 0 ? <p className="px-6 py-6 text-sm text-on-surface-variant">No orders found.</p> : null}
           {orders.length > 0 && filteredOrders.length === 0 ? (
             <p className="px-6 py-6 text-sm text-on-surface-variant">No orders match this filter. Try &quot;All&quot; or another tab.</p>

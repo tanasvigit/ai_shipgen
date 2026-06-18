@@ -133,8 +133,8 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 32, paddingTop: 8 },
-  screenTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
-  screenSubtitle: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 20 },
+  screenTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5, textAlign: 'center' },
+  screenSubtitle: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 20, textAlign: 'center' },
   centered: { paddingVertical: 40, alignItems: 'center' },
   bannerError: {
     backgroundColor: '#fee2e2',
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 12,
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',

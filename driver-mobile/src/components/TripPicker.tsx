@@ -38,8 +38,8 @@ export default function TripPicker({ trips, selectedTripId, onSelectTripId }: Tr
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 10,
+    paddingBottom: 12,
     backgroundColor: '#f4f5f7',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',

@@ -14,7 +14,7 @@ from .errors import DomainError, install_error_handlers, raise_api_error
 from .ml.dataset_export import export_learning_dataset
 from .ml.evaluate import run_offline_evaluation
 from .services import communication, routing
-from .services.nlp_extraction import extract_order_from_text, nlp_readiness
+from .services.nlp_extraction import extract_order_from_text, nlp_readiness, validate_nlp_runtime_config
 from .workers.runner import run_worker_loop
 
 app = FastAPI(title="ShipGen MVP API")
@@ -63,6 +63,7 @@ async def simulation_worker() -> None:
 async def startup() -> None:
     global simulation_task, worker_task
     ensure_schema_is_migrated()
+    validate_nlp_runtime_config()
     with SessionLocal() as db:
         crud.seed_drivers(db)
         crud.seed_vehicles(db)
@@ -406,6 +407,8 @@ def ingest_message(
     order, trip = crud.create_order_with_auto_trip_assignment(db, extracted["order"])
     return {
         "confidence": extracted["confidence"],
+        "nlpEngineUsed": extracted["nlpEngineUsed"],
+        "nlpErrorReason": extracted.get("nlpErrorReason"),
         "order": crud.serialize_order(order),
         "trip": crud.serialize_trip(trip),
     }
@@ -419,7 +422,15 @@ def ingest_email(
 ) -> dict:
     extracted = extract_order_from_text(payload.message)
     order, trip = crud.create_order_with_auto_trip_assignment(db, extracted["order"])
-    return {"source": "email", "sourceId": payload.sourceId, "confidence": extracted["confidence"], "order": crud.serialize_order(order), "trip": crud.serialize_trip(trip)}
+    return {
+        "source": "email",
+        "sourceId": payload.sourceId,
+        "confidence": extracted["confidence"],
+        "nlpEngineUsed": extracted["nlpEngineUsed"],
+        "nlpErrorReason": extracted.get("nlpErrorReason"),
+        "order": crud.serialize_order(order),
+        "trip": crud.serialize_trip(trip),
+    }
 
 
 @app.post("/ingestion/whatsapp")
@@ -434,6 +445,8 @@ def ingest_whatsapp(
         "source": "whatsapp",
         "sourceId": payload.sourceId,
         "confidence": extracted["confidence"],
+        "nlpEngineUsed": extracted["nlpEngineUsed"],
+        "nlpErrorReason": extracted.get("nlpErrorReason"),
         "order": crud.serialize_order(order),
         "trip": crud.serialize_trip(trip),
     }

@@ -25,12 +25,44 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 
 
+
+#database (setup):-(dev use only)
+-python -c "from app.database import Base, engine; import app.models; Base.metadata.create_all(bind=engine)"
+-python -m alembic -c alembic.ini stamp head
+-uvicorn app.main:app --reload --port 8000
+
+
+
+
+
 # 4) Frontend setup + run (new terminal)
 cd D:\ai_shipgen\frontend
 npm install
 npm run dev
 npm start
+
+
+expo:-
 npx expo start  (for app)
+eas build -p android --profile preview  (for apk)
+eas build -p android  (for aab)
+
+
+react-native cli:-
+gradlew.bat --stop
+gradlew.bat clean
+gradlew.bat assembleDebug
+gradlew.bat assembleRelease
+If build succeeds, APK will be at:
+D:\ai_shipgen\driver-mobile\android\app\build\outputs\apk\debug\app-debug.apk
+Then install:
+adb install -r D:\ai_shipgen\driver-mobile\android\app\build\outputs\apk\debug\app-debug.apk
+for logs:-
+adb logcat -c
+adb logcat | findstr com.lawde123.shipgendrivermobile
+
+
+
 
 
 # 5) Optional: verify backend readiness

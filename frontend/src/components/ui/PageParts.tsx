@@ -44,6 +44,8 @@ interface SummaryCardProps {
   label: string
   value: number
   danger?: boolean
+  active?: boolean
+  onClick?: () => void
 }
 
 interface InsightCardProps {
@@ -140,13 +142,31 @@ export function InfoRow({ label, value }: InfoRowProps) {
   )
 }
 
-export function SummaryCard({ label, value, danger = false }: SummaryCardProps) {
-  return (
-    <div className={`px-8 py-5 rounded-2xl border flex flex-col items-center justify-center min-w-[140px] shadow-sm ${danger ? 'bg-red-50 border-red-200/50' : 'bg-slate-50 border-slate-200/60'}`}>
+export function SummaryCard({ label, value, danger = false, active = false, onClick }: SummaryCardProps) {
+  const baseClass = `px-8 py-5 rounded-2xl border flex flex-col items-center justify-center min-w-[140px] shadow-sm ${
+    danger ? 'bg-red-50 border-red-200/50' : 'bg-slate-50 border-slate-200/60'
+  } ${active ? 'ring-2 ring-primary/40' : ''}`
+
+  const content = (
+    <>
       <span className={`text-[10px] font-bold uppercase tracking-[0.15em] mb-1 ${danger ? 'text-red-600/80' : 'text-slate-500'}`}>{label}</span>
       <span className={`text-3xl font-headline font-extrabold ${danger ? 'text-red-700' : 'text-slate-900'}`}>{value}</span>
-    </div>
+    </>
   )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseClass} text-left cursor-pointer hover:opacity-95 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return <div className={baseClass}>{content}</div>
 }
 
 export function InsightCard({ text }: InsightCardProps) {

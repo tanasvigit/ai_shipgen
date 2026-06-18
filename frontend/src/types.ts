@@ -2,6 +2,7 @@ export type Screen = 'dashboard' | 'orders' | 'auto-trip' | 'tracking' | 'alerts
 
 /** Orders list: Active = non-completed trip; Completed = completed trip; Other = no trip yet */
 export type OrdersListFilter = 'all' | 'active' | 'completed' | 'other'
+export type AlertsListFilter = 'all' | 'critical' | 'resolved'
 
 export interface NavItem {
   label: string
@@ -89,7 +90,7 @@ export interface CreateOrderForm {
 
 export interface AuthSession {
   accessToken: string
-  role: string
+  role: 'admin' | 'driver' | string
   driverId?: number | null
 }
 

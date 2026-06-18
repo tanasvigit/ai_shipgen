@@ -1,7 +1,7 @@
 import type { Alert, AuthMe, AuthSession, DriverProfile, Trip } from '../types'
 import { parseApiError } from './errorUtils'
 
-const API_BASE = 'http://192.168.0.171:8000'
+const API_BASE = 'https://beatrice-unchalked-hypernormally.ngrok-free.dev'
 
 function authHeader(session: AuthSession): Record<string, string> {
   return { Authorization: `Bearer ${session.accessToken}` }

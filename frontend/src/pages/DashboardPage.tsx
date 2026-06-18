@@ -1,6 +1,8 @@
 import { Input, MetricCard } from '../components/ui/PageParts'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-import type { Alert, CreateOrderForm, Driver, Order, OrdersListFilter, Screen, Trip } from '../types'
+import { useMemo, useState } from 'react'
+import type { Alert, AlertsListFilter, CreateOrderForm, Driver, Order, OrdersListFilter, Screen, Trip } from '../types'
+import { formatINR } from '../utils/currency'
 
 interface DashboardPageProps {
   orders: Order[]
@@ -21,6 +23,7 @@ interface DashboardPageProps {
   approvalMode: string
   isLoading: boolean
   openOrdersWithFilter: (filter: OrdersListFilter) => void
+  openAlertsWithFilter: (filter: AlertsListFilter) => void
   actionError: string
 }
 
@@ -43,8 +46,18 @@ function DashboardPage({
   approvalMode,
   isLoading,
   openOrdersWithFilter,
+  openAlertsWithFilter,
   actionError,
 }: DashboardPageProps) {
+  const ONGOING_TRIPS_PER_PAGE = 10
+  const [ongoingTripsPage, setOngoingTripsPage] = useState(1)
+  const totalOngoingTripPages = Math.max(1, Math.ceil(trips.length / ONGOING_TRIPS_PER_PAGE))
+  const visibleOngoingTrips = useMemo(() => {
+    const page = Math.min(ongoingTripsPage, totalOngoingTripPages)
+    const start = (page - 1) * ONGOING_TRIPS_PER_PAGE
+    return trips.slice(start, start + ONGOING_TRIPS_PER_PAGE)
+  }, [trips, ongoingTripsPage, totalOngoingTripPages])
+
   const totalProfit = trips.reduce((sum, trip) => sum + (trip.finance?.profit ?? 0), 0)
   return (
     <div className="p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 lg:gap-8 min-w-0">
@@ -57,7 +70,14 @@ function DashboardPage({
             icon="navigation"
             onClick={() => openOrdersWithFilter('active')}
           />
-          <MetricCard title="Critical Alerts" value={unresolvedAlerts.length} sub="Action required" icon="priority_high" danger />
+          <MetricCard
+            title="Critical Alerts"
+            value={unresolvedAlerts.length}
+            sub="Action required"
+            icon="priority_high"
+            danger
+            onClick={() => openAlertsWithFilter('critical')}
+          />
           <MetricCard
             title="Completed (24h)"
             value={completedTrips.length}
@@ -65,7 +85,13 @@ function DashboardPage({
             icon="done_all"
             onClick={() => openOrdersWithFilter('completed')}
           />
-          <MetricCard title="Profit Snapshot" value={`$${Math.round(totalProfit)}`} sub="Backend finance engine" icon="attach_money" />
+          <MetricCard
+            title="Profit Snapshot"
+            value={formatINR(Math.round(totalProfit))}
+            sub="Backend finance engine"
+            icon="currency_rupee"
+            onClick={() => setScreen('profit')}
+          />
         </div>
 
         <section>
@@ -157,7 +183,7 @@ function DashboardPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
-                {trips.map((trip) => {
+                {visibleOngoingTrips.map((trip) => {
                   const progress = trip.status === 'in_transit' ? 70 : trip.status === 'assigned' ? 35 : trip.status === 'completed' ? 100 : 15
                   return (
                     <tr key={trip.id} className="hover:bg-surface-container-low transition-colors">
@@ -177,6 +203,34 @@ function DashboardPage({
                 })}
               </tbody>
             </table>
+          </div>
+          <div className="px-6 py-4 border-t border-black/5 flex items-center justify-between gap-3">
+            <p className="text-xs text-on-surface-variant">
+              Showing {trips.length === 0 ? 0 : (Math.min(ongoingTripsPage, totalOngoingTripPages) - 1) * ONGOING_TRIPS_PER_PAGE + 1}
+              -
+              {Math.min(Math.min(ongoingTripsPage, totalOngoingTripPages) * ONGOING_TRIPS_PER_PAGE, trips.length)} of {trips.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setOngoingTripsPage((current) => Math.max(1, current - 1))}
+                disabled={ongoingTripsPage <= 1}
+                className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-semibold text-on-surface-variant">
+                Page {Math.min(ongoingTripsPage, totalOngoingTripPages)} / {totalOngoingTripPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setOngoingTripsPage((current) => Math.min(totalOngoingTripPages, current + 1))}
+                disabled={ongoingTripsPage >= totalOngoingTripPages}
+                className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </section>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Trip } from '../types'
 import type { Dispatch, SetStateAction } from 'react'
 import { tripPublicRef } from '../utils/tripLabel'
@@ -26,9 +26,17 @@ function DriverOpsPage({
   isLoading,
   actionError,
 }: DriverOpsPageProps) {
+  const ASSIGNED_TRIPS_PER_PAGE = 10
   const [issueText, setIssueText] = useState('')
+  const [assignedTripsPage, setAssignedTripsPage] = useState(1)
   const actionableTrips = trips.filter((trip) => trip.status !== 'completed')
   const criticalTrips = actionableTrips.filter((trip) => (trip.delayRisk ?? 0) >= 0.6)
+  const totalAssignedPages = Math.max(1, Math.ceil(actionableTrips.length / ASSIGNED_TRIPS_PER_PAGE))
+  const currentAssignedPage = Math.min(assignedTripsPage, totalAssignedPages)
+  const pagedActionableTrips = useMemo(() => {
+    const start = (currentAssignedPage - 1) * ASSIGNED_TRIPS_PER_PAGE
+    return actionableTrips.slice(start, start + ASSIGNED_TRIPS_PER_PAGE)
+  }, [actionableTrips, currentAssignedPage])
 
   return (
     <main className="p-4 sm:p-6 lg:p-8">
@@ -44,8 +52,8 @@ function DriverOpsPage({
               <h2 className="text-sm font-extrabold uppercase tracking-wider text-on-surface-variant">Assigned Trips</h2>
               <span className="text-xs font-bold bg-surface-container px-2 py-1 rounded">{actionableTrips.length} active</span>
             </div>
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-              {actionableTrips.map((trip) => (
+            <div className="space-y-3 pr-1">
+              {pagedActionableTrips.map((trip) => (
                 <button
                   key={trip.id}
                   onClick={() => setSelectedTripId(trip.id)}
@@ -60,6 +68,9 @@ function DriverOpsPage({
                   <p className="text-xs text-on-surface-variant mt-1">
                     {trip.order?.pickupLocation || '-'} to {trip.order?.dropLocation || '-'}
                   </p>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    Driver: {trip.driver?.name || 'Unassigned'} | Vehicle: {trip.vehicle?.name || 'Unassigned'}
+                  </p>
                   <div className="mt-2 text-[11px] text-on-surface-variant flex gap-4">
                     <span>ETA: {trip.eta ? new Date(trip.eta).toLocaleString() : '-'}</span>
                     <span>Risk: {Math.round((trip.delayRisk ?? 0) * 100)}%</span>
@@ -68,6 +79,35 @@ function DriverOpsPage({
               ))}
               {actionableTrips.length === 0 ? <p className="text-sm text-on-surface-variant">No assigned trips.</p> : null}
             </div>
+            {actionableTrips.length > 0 ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-on-surface-variant">
+                  Showing {actionableTrips.length === 0 ? 0 : (currentAssignedPage - 1) * ASSIGNED_TRIPS_PER_PAGE + 1}-
+                  {Math.min(currentAssignedPage * ASSIGNED_TRIPS_PER_PAGE, actionableTrips.length)} of {actionableTrips.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAssignedTripsPage((current) => Math.max(1, current - 1))}
+                    disabled={currentAssignedPage <= 1}
+                    className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs font-semibold text-on-surface-variant">
+                    Page {currentAssignedPage} / {totalAssignedPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAssignedTripsPage((current) => Math.min(totalAssignedPages, current + 1))}
+                    disabled={currentAssignedPage >= totalAssignedPages}
+                    className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-low"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </section>
 
           <aside className="xl:col-span-4 space-y-4">

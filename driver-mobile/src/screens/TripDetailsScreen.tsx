@@ -51,12 +51,22 @@ export default function TripDetailsScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.headerRow}>
-        <Text style={styles.tripId}>{ref}</Text>
-        <StatusBadge status={statusBadgeLabel(trip.status)} />
-      </View>
-      <View style={styles.aiTag}>
-        <Text style={styles.aiTagText}>Assigned by ShipGen AI</Text>
+      <View style={styles.topMetaRow}>
+        <View style={styles.topMetaCol}>
+          <Text style={styles.tripId} numberOfLines={2}>
+            {ref}
+          </Text>
+        </View>
+        <View style={[styles.topMetaCol, styles.topMetaColCenter]}>
+          <View style={styles.aiTag}>
+            <Text style={styles.aiTagText} numberOfLines={2}>
+              Assigned by ShipGen AI
+            </Text>
+          </View>
+        </View>
+        <View style={[styles.topMetaCol, styles.topMetaColRight]}>
+          <StatusBadge status={statusBadgeLabel(trip.status)} />
+        </View>
       </View>
 
       {exceptionSummary ? (
@@ -68,11 +78,10 @@ export default function TripDetailsScreen({
 
       <Card>
         <Text style={styles.sectionTitle}>Live status</Text>
-        <Text style={styles.metaText}>{formatEtaLabel(trip.eta)}</Text>
+        <Text style={styles.locationText}>{formatEtaLabel(trip.eta)}</Text>
         <Text style={styles.metaText}>Delay risk: {Math.round((trip.delayRisk ?? 0) * 100)}%</Text>
         <Text style={styles.metaText}>Last update: {formatLastUpdated(trip.lastUpdated)}</Text>
         <Text style={styles.metaText}>Position: {pos}</Text>
-        <Text style={styles.metaText}>Vehicle: {trip.vehicle?.name ?? '—'}</Text>
       </Card>
 
       <Card>
@@ -82,7 +91,6 @@ export default function TripDetailsScreen({
         <View style={styles.divider} />
         <Text style={styles.sectionTitle}>Drop-Off</Text>
         <Text style={styles.locationText}>{drop}</Text>
-        <Text style={styles.metaText}>{formatEtaLabel(trip.eta)}</Text>
       </Card>
 
       <View style={styles.row}>
@@ -98,10 +106,6 @@ export default function TripDetailsScreen({
         </Card>
       </View>
 
-      <Card style={styles.routeCard}>
-        <Text style={styles.routeLabel}>View Route Detail</Text>
-      </Card>
-
       <AppButton label="Open Navigation" onPress={onOpenNavigation} variant="secondary" disabled={!canOpenNavigation || isLoading} />
       <View style={styles.spacer} />
       <AppButton label="Start Trip & Begin Navigation" onPress={onStartTrip} variant="primary" disabled={!canStartTrip || isLoading} />
@@ -116,107 +120,135 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f5f7',
   },
   content: {
+    width: '100%',
+    maxWidth: '100%',
+    flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 18,
+    paddingTop: 14,
+    paddingBottom: 32,
     gap: 12,
   },
-  headerRow: {
+  topMetaRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    gap: 8,
+  },
+  topMetaCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  topMetaColCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topMetaColRight: {
+    alignItems: 'flex-end',
   },
   tripId: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#0f172a',
+    lineHeight: 28,
+    letterSpacing: -0.2,
+    flexShrink: 1,
   },
   aiTag: {
-    alignSelf: 'flex-start',
+    maxWidth: '100%',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#dbe3ef',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: '#eef6ff',
+    borderColor: '#dbeafe',
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+    backgroundColor: '#eff6ff',
   },
   aiTagText: {
-    color: '#2b6cb0',
+    color: '#1d4ed8',
     textTransform: 'uppercase',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 0.25,
+    flexShrink: 1,
   },
   warnBanner: {
+    width: '100%',
+    maxWidth: '100%',
     backgroundColor: '#fef2f2',
     borderLeftWidth: 4,
     borderLeftColor: '#ef4444',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
   },
   warnTitle: {
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#991b1b',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 4,
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
   warnText: {
-    fontSize: 13,
+    fontSize: 15,
+    fontWeight: '400',
     color: '#7f1d1d',
-    lineHeight: 18,
+    lineHeight: 22,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: '#6b7280',
-    fontWeight: '700',
+    letterSpacing: 0.6,
+    color: '#64748b',
+    fontWeight: '600',
   },
   locationText: {
-    marginTop: 2,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    lineHeight: 20,
+    marginTop: 8,
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#0f172a',
+    lineHeight: 24,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   metaText: {
-    marginTop: 4,
-    fontSize: 13,
-    color: '#525f70',
-    fontWeight: '500',
+    marginTop: 6,
+    fontSize: 15,
+    fontWeight: '400',
+    color: '#64748b',
+    lineHeight: 22,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   divider: {
     height: 1,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 10,
+    backgroundColor: '#e2e8f0',
+    marginVertical: 14,
   },
   row: {
     flexDirection: 'row',
     gap: 10,
+    width: '100%',
+    maxWidth: '100%',
   },
   halfCard: {
     flex: 1,
-  },
-  routeCard: {
-    minHeight: 105,
-    justifyContent: 'flex-end',
-    backgroundColor: '#d1d5db',
-  },
-  routeLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
+    minWidth: 0,
+    maxWidth: '100%',
   },
   spacer: {
     height: 2,
   },
   helperText: {
-    marginTop: 4,
+    marginTop: 8,
     textAlign: 'center',
-    color: '#6b7280',
-    fontSize: 12,
-    fontWeight: '500',
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+    maxWidth: '100%',
+    flexShrink: 1,
+    paddingHorizontal: 8,
   },
 })

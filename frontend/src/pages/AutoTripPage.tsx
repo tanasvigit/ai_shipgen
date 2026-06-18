@@ -1,5 +1,7 @@
 import { Detail, InfoCard, MiniMetric } from '../components/ui/PageParts'
+import { useMemo } from 'react'
 import type { Screen, Trip } from '../types'
+import { formatINR } from '../utils/currency'
 
 interface AutoTripPageProps {
   selectedTrip: Trip | null
@@ -15,6 +17,26 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handl
   if (!selectedTrip) {
     return <div className="p-8 text-on-surface-variant">No trip yet. Create an order from Dashboard.</div>
   }
+
+  const currentLat = typeof selectedTrip.currentLat === 'number' ? selectedTrip.currentLat : null
+  const currentLng = typeof selectedTrip.currentLng === 'number' ? selectedTrip.currentLng : null
+  const hasValidLiveLocation = currentLat !== null && currentLng !== null && Number.isFinite(currentLat) && Number.isFinite(currentLng) && !(currentLat === 0 && currentLng === 0)
+  const hasRouteText = Boolean(selectedTrip.order?.pickupLocation && selectedTrip.order?.dropLocation)
+  const mapEmbedSrc = useMemo(() => {
+    if (!hasValidLiveLocation || currentLat === null || currentLng === null) return null
+    const delta = 0.06
+    const left = (currentLng - delta).toFixed(6)
+    const right = (currentLng + delta).toFixed(6)
+    const top = (currentLat + delta).toFixed(6)
+    const bottom = (currentLat - delta).toFixed(6)
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${currentLat.toFixed(6)}%2C${currentLng.toFixed(6)}`
+  }, [currentLat, currentLng, hasValidLiveLocation])
+  const routeMapSrc = useMemo(() => {
+    if (!hasRouteText) return null
+    const from = selectedTrip.order?.pickupLocation ?? ''
+    const to = selectedTrip.order?.dropLocation ?? ''
+    return `https://maps.google.com/maps?q=${encodeURIComponent(`${from} to ${to}`)}&z=6&output=embed`
+  }, [hasRouteText, selectedTrip.order?.dropLocation, selectedTrip.order?.pickupLocation])
 
   return (
     <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
@@ -45,7 +67,30 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handl
           </div>
 
           <div className="relative rounded-2xl overflow-hidden h-[340px] bg-surface-container group">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-200/50 to-slate-400/20" />
+            {mapEmbedSrc ? (
+              <iframe
+                title="Live shipment map"
+                src={mapEmbedSrc}
+                className="absolute inset-0 w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : routeMapSrc ? (
+              <iframe
+                title="Route map"
+                src={routeMapSrc}
+                className="absolute inset-0 w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-200/50 to-slate-400/20 flex items-center justify-center">
+                <p className="text-sm font-semibold text-on-surface-variant px-6 text-center">
+                  Route map is not available for this trip yet.
+                </p>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/10" />
             <div className="absolute top-4 left-4 z-10 bg-surface-container-lowest/80 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-on-tertiary-container animate-pulse" />
               <span className="text-xs font-bold tracking-tight font-headline">Live Path Optimization</span>
@@ -73,13 +118,13 @@ function AutoTripPage({ selectedTrip, handleApproveTrip, handleRejectTrip, handl
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Cost & Profit Allocation</h3>
               <div className="bg-tertiary-fixed px-3 py-1 rounded-md text-on-tertiary-fixed text-xs font-bold">
-                Estimated Profit: ${Math.round(selectedTrip.finance?.profit ?? 0)}
+                Estimated Profit: {formatINR(Math.round(selectedTrip.finance?.profit ?? 0))}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-8">
-              <MiniMetric label="Fuel" value={`$${Math.round(selectedTrip.finance?.fuelCost ?? 0)}`} />
-              <MiniMetric label="Driver" value={`$${Math.round(selectedTrip.finance?.driverCost ?? 0)}`} />
-              <MiniMetric label="Tolls" value={`$${Math.round(selectedTrip.finance?.tollCost ?? 0)}`} />
+              <MiniMetric label="Fuel" value={formatINR(Math.round(selectedTrip.finance?.fuelCost ?? 0))} />
+              <MiniMetric label="Driver" value={formatINR(Math.round(selectedTrip.finance?.driverCost ?? 0))} />
+              <MiniMetric label="Tolls" value={formatINR(Math.round(selectedTrip.finance?.tollCost ?? 0))} />
             </div>
             <p className="mt-4 text-xs text-on-surface-variant">Route: {(selectedTrip.primaryRoute as { name?: string } | undefined)?.name || 'Primary route pending'}</p>
           </div>

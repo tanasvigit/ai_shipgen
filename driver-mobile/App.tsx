@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Alert as RNAlert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
+import { ActivityIndicator, Alert as RNAlert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   driverDelivered,
   driverReachedPickup,
@@ -24,10 +26,12 @@ import type { Alert as TripAlert, AuthSession, Trip } from './src/types'
 
 type DriverScreen = 'trip-details' | 'navigation' | 'status-update' | 'account'
 
-export default function App() {
+function AppContent() {
+  const insets = useSafeAreaInsets()
   const [session, setSession] = useState<AuthSession | null>(null)
   const [username, setUsername] = useState('driver1')
   const [password, setPassword] = useState('driver123')
+  const [showPassword, setShowPassword] = useState(false)
   const [trips, setTrips] = useState<Trip[]>([])
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null)
   const [activeScreen, setActiveScreen] = useState<DriverScreen>('trip-details')
@@ -226,11 +230,22 @@ export default function App() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'right', 'left', 'bottom']}>
         <View style={styles.container}>
           <Text style={styles.title}>ShipGen Driver</Text>
           <TextInput value={username} onChangeText={setUsername} placeholder="Username" style={styles.input} autoCapitalize="none" />
-          <TextInput value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry style={styles.input} />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              style={[styles.input, styles.passwordInput]}
+            />
+            <Pressable onPress={() => setShowPassword((prev) => !prev)} style={styles.passwordToggle}>
+              <Text style={styles.passwordToggleText}>{showPassword ? 'Hide' : 'Show'}</Text>
+            </Pressable>
+          </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <AppButton label={loading ? 'Signing in...' : 'Sign in'} onPress={handleLogin} disabled={loading} />
         </View>
@@ -240,12 +255,7 @@ export default function App() {
 
   const tripLabel = selectedTrip ? tripPublicRef(selectedTrip) : ''
 
-  const bottomTabItems = [
-    { label: 'TRIPS', icon: '🚚' },
-    { label: 'MAP', icon: '🗺️' },
-    { label: 'MESSAGES', icon: '💬' },
-    { label: 'ACCOUNT', icon: '👤' },
-  ] as const
+  const bottomTabItems = [{ label: 'TRIPS' }, { label: 'MAP' }, { label: 'MESSAGES' }, { label: 'ACCOUNT' }] as const
 
   function tabPillActive(label: string): boolean {
     if (label === 'TRIPS') return tabTripsActive
@@ -256,7 +266,7 @@ export default function App() {
 
   if (session && !selectedTrip) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'right', 'left', 'bottom']}>
         <View style={styles.screenHost}>
           {activeScreen === 'account' ? (
             <AccountScreen session={session} onLogout={performLogout} />
@@ -274,20 +284,18 @@ export default function App() {
               onPress={() => onTabPress(item.label)}
               style={[styles.tabPill, tabPillActive(item.label) ? styles.tabPillActive : null]}
             >
-              <Text style={[styles.tabText, tabPillActive(item.label) ? styles.tabTextActive : null]}>
-                {item.icon} {item.label}
-              </Text>
+              <Text style={[styles.tabText, tabPillActive(item.label) ? styles.tabTextActive : null]}>{item.label}</Text>
             </Pressable>
           ))}
         </View>
-        {loading ? <ActivityIndicator style={styles.loader} /> : null}
-        {error ? <Text style={styles.errorSticky}>{error}</Text> : null}
+        {loading ? <ActivityIndicator style={[styles.loader, { top: insets.top + 10 }]} /> : null}
+        {error ? <Text style={[styles.errorSticky, { top: insets.top + 10 }]}>{error}</Text> : null}
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'right', 'left', 'bottom']}>
       {activeScreen !== 'account' ? (
         <TripPicker trips={trips} selectedTripId={selectedTrip!.id} onSelectTripId={selectTripById} />
       ) : null}
@@ -340,15 +348,22 @@ export default function App() {
             onPress={() => onTabPress(item.label)}
             style={[styles.tabPill, tabPillActive(item.label) ? styles.tabPillActive : null]}
           >
-            <Text style={[styles.tabText, tabPillActive(item.label) ? styles.tabTextActive : null]}>
-              {item.icon} {item.label}
-            </Text>
+            <Text style={[styles.tabText, tabPillActive(item.label) ? styles.tabTextActive : null]}>{item.label}</Text>
           </Pressable>
         ))}
       </View>
-      {loading ? <ActivityIndicator style={styles.loader} /> : null}
-      {error ? <Text style={styles.errorSticky}>{error}</Text> : null}
+      {loading ? <ActivityIndicator style={[styles.loader, { top: insets.top + 10 }]} /> : null}
+      {error ? <Text style={[styles.errorSticky, { top: insets.top + 10 }]}>{error}</Text> : null}
     </SafeAreaView>
+  )
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <AppContent />
+    </SafeAreaProvider>
   )
 }
 
@@ -366,6 +381,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#fff',
     paddingHorizontal: 12,
+  },
+  passwordWrap: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  passwordInput: {
+    paddingRight: 64,
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  passwordToggleText: {
+    color: '#1d4ed8',
+    fontSize: 12,
+    fontWeight: '700',
   },
   error: { color: '#b91c1c', fontSize: 12, fontWeight: '600' },
   bottomTabs: {
@@ -398,13 +431,11 @@ const styles = StyleSheet.create({
   loader: {
     position: 'absolute',
     right: 12,
-    top: 12,
   },
   errorSticky: {
     position: 'absolute',
     left: 12,
     right: 12,
-    top: 12,
     backgroundColor: '#fee2e2',
     color: '#991b1b',
     padding: 8,

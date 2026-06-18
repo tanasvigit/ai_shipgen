@@ -1,20 +1,25 @@
 interface TopBarProps {
   isSidebarCollapsed: boolean
+  isSidebarOpen: boolean
   onToggleSidebar: () => void
   onLogout: () => void
   sessionRole: string
 }
 
-function TopBar({ isSidebarCollapsed, onToggleSidebar, onLogout, sessionRole }: TopBarProps) {
+function TopBar({ isSidebarCollapsed, isSidebarOpen, onToggleSidebar, onLogout, sessionRole }: TopBarProps) {
+  const toggleLabel = isSidebarOpen ? 'Close navigation menu' : isSidebarCollapsed ? 'Expand sidebar' : 'Toggle navigation menu'
+
   return (
     <header className="sticky top-0 w-full z-40 h-16 bg-[#f7f9fb]/70 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] font-['Manrope'] text-sm tracking-wide min-w-0">
       <div className="flex items-center gap-4 sm:gap-8 min-w-0">
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            className="w-8 h-8 rounded-md bg-white border border-black/10 hover:bg-surface-container-low flex items-center justify-center"
-            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="w-8 h-8 rounded-md bg-white border border-black/10 hover:bg-surface-container-low focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 flex items-center justify-center"
+            aria-expanded={isSidebarOpen}
+            aria-controls="app-sidebar"
+            aria-label={toggleLabel}
+            title={toggleLabel}
           >
             <span className="material-symbols-outlined text-[18px]">{isSidebarCollapsed ? 'menu_open' : 'menu'}</span>
           </button>
